@@ -1,0 +1,25 @@
+{
+  "name": "asp-x402-examples",
+  "version": "1.0.0",
+  "private": true,
+  "description": "x402 on Monad for Asp: facilitator, seller, buyer, and a live hire smoke.",
+  "type": "module",
+  "scripts": {
+    "facilitator": "node Facilitator/index.mjs",
+    "seller": "node Seller/index.mjs",
+    "buyer": "node Buyer/index.mjs",
+    "hire-smoke": "node Buyer/asp-hire-smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@x402/core": "~2.26.0",
+    "@x402/evm": "~2.26.0",
+    "@x402/express": "~2.26.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "viem": "^2.50.0"
+  }
+}
