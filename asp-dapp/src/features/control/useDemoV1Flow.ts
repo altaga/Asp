@@ -15,7 +15,7 @@ import {
 } from '../kiosk/kioskPay';
 import type { ChatPhase, PohCardPayload } from '../../theme/tokens';
 
-export const RELEASE_LABEL = 'Tokyo 2026 capsule';
+export const RELEASE_LABEL = 'Metropolis capsule';
 export const DEVICE_LABEL = 'Event Gachapon';
 export const PRICE_USDC = '0.002'; // 2000 atomic USDC (6 decimals)
 

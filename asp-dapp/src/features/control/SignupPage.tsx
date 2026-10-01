@@ -123,7 +123,7 @@ export function SignupPage() {
                   </p>
                   <section style={styles.pass} aria-label="Your ticket">
                     <div style={styles.passTop}>
-                      <span style={styles.passEvent}>Tokyo 2026</span>
+                      <span style={styles.passEvent}>Metropolis 2026</span>
                       <span style={styles.passKind}>Used</span>
                     </div>
                     <div style={styles.passCode}>{ticket}</div>
@@ -147,7 +147,7 @@ export function SignupPage() {
 
                   <section style={styles.pass} aria-label="Winner ticket">
                     <div style={styles.passTop}>
-                      <span style={styles.passEvent}>Tokyo 2026</span>
+                      <span style={styles.passEvent}>Metropolis 2026</span>
                       <span style={styles.passKind}>Winner</span>
                     </div>
                     <div style={styles.passCode}>{ticket}</div>

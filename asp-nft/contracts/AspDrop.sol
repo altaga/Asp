@@ -6,7 +6,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-/// @title Asp Tokyo 2026 Capsule — 10 limited editions, art fully on-chain.
+/// @title Asp Metropolis Capsule — 10 limited editions, art fully on-chain.
 /// @notice Editions are minted into the contract and only leave through `release`, which the
 ///         Asp drop server calls once per settled USDC payment (keyed by `claimId`).
 contract AspDrop is ERC721, Ownable {
@@ -23,7 +23,7 @@ contract AspDrop is ERC721, Ownable {
     error AlreadyReleased();
     error NothingToRelease();
 
-    constructor(address owner_) ERC721("Asp Tokyo 2026 Capsule", "ASPCAP") Ownable(owner_) {}
+    constructor(address owner_) ERC721("Asp Metropolis Capsule", "ASPCAP") Ownable(owner_) {}
 
     function mintEditions(uint256 count) external onlyOwner {
         if (totalMinted + count > MAX_SUPPLY) revert SoldOut();
@@ -51,11 +51,11 @@ contract AspDrop is ERC721, Ownable {
         (string memory name, , ) = _colorway(tokenId);
         string memory json = string.concat(
             '{"name":"Asp Capsule #', tokenId.toString(),
-            '","description":"One of 10 limited capsules from the Asp Tokyo 2026 gachapon. Proven human with World ID, paid in USDC on Monad.",',
+            '","description":"One of 10 limited capsules from the Asp Metropolis gachapon. Proven human with World ID, paid in USDC on Monad.",',
             '"image":"data:image/svg+xml;base64,', Base64.encode(bytes(_svg(tokenId))),
             '","attributes":[{"trait_type":"Edition","value":"', tokenId.toString(), ' / 10"},',
             '{"trait_type":"Colorway","value":"', name, '"},',
-            '{"trait_type":"Drop","value":"Tokyo 2026"},{"trait_type":"Chain","value":"Monad"}]}'
+            '{"trait_type":"Drop","value":"Monad Metropolis 2026"},{"trait_type":"Chain","value":"Monad"}]}'
         );
         return string.concat("data:application/json;base64,", Base64.encode(bytes(json)));
     }
@@ -65,7 +65,7 @@ contract AspDrop is ERC721, Ownable {
         uint256 i = (id - 1) % 10;
         if (i == 0) return ("Monad Violet", "#836EF9", "#3A2BB8");
         if (i == 1) return ("Sakura", "#FF7AA2", "#B5179E");
-        if (i == 2) return ("Tokyo Red", "#FF3B30", "#8B0000");
+        if (i == 2) return ("Metro Red", "#FF3B30", "#8B0000");
         if (i == 3) return ("Matcha", "#8BD48E", "#2E7D32");
         if (i == 4) return ("Harbor Blue", "#3FA9F5", "#1A4F9C");
         if (i == 5) return ("Gold Leaf", "#FFC94A", "#C77700");
@@ -110,7 +110,7 @@ contract AspDrop is ERC721, Ownable {
     function _svgText(uint256 id, string memory name, string memory a) internal pure returns (string memory) {
         string memory ed = id < 10 ? string.concat("0", id.toString()) : id.toString();
         return string.concat(
-            "<text x='28' y='46' font-family='Helvetica,Arial,sans-serif' font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>TOKYO 2026 / LIMITED</text>",
+            "<text x='28' y='46' font-family='Helvetica,Arial,sans-serif' font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>METROPOLIS / LIMITED</text>",
             "<text x='372' y='46' text-anchor='end' font-family='Helvetica,Arial,sans-serif' font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>MONAD</text>",
             "<text x='28' y='368' font-family='Helvetica,Arial,sans-serif' font-size='34' font-weight='800' fill='#FFFFFF'>#", ed,
             "<tspan font-size='16' fill-opacity='.55' dx='8'>/ 10</tspan></text>",

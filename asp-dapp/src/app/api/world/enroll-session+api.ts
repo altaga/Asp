@@ -121,7 +121,7 @@ export async function POST(request: Request): Promise<Response> {
       body: JSON.stringify({
         session_id,
         nullifier: String(nullifier),
-        release_id: 'tokyo2026-capsule-v1',
+        release_id: 'metropolis-capsule-v1',
         preverified: true,
       }),
     });

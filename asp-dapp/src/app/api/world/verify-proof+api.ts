@@ -47,7 +47,7 @@ export async function POST(request: Request): Promise<Response> {
     const url = `https://developer.world.org/api/v4/verify/${encodeURIComponent(appId)}`;
     const payload = {
       ...proof,
-      action: action || (proof as any).action || 'asp-release-tokyo2026-capsule-v1',
+      action: action || (proof as any).action || 'asp-release-metropolis-capsule-v1',
       signal: signal || '',
       verification_level: (proof as any).verification_level || 'device',
     };

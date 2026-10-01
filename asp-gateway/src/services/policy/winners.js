@@ -18,7 +18,7 @@ function makeTicket() {
   return `WIN-${raw}`;
 }
 
-export function enrollWinner({ nullifier, release_id = 'tokyo2026-capsule-v1' }) {
+export function enrollWinner({ nullifier, release_id = 'metropolis-capsule-v1' }) {
   const key = String(nullifier || '').toLowerCase();
   if (!key) return { ok: false, error: 'missing-nullifier' };
 
@@ -36,7 +36,7 @@ export function enrollWinner({ nullifier, release_id = 'tokyo2026-capsule-v1' })
   const record = {
     ticket,
     nullifier: key,
-    release_id: String(release_id || 'tokyo2026-capsule-v1'),
+    release_id: String(release_id || 'metropolis-capsule-v1'),
     session_id: null,
     enrolled_at: nowMs(),
     claimed_at: null,
@@ -53,7 +53,7 @@ export function enrollWinner({ nullifier, release_id = 'tokyo2026-capsule-v1' })
 export function enrollWinnerWithSession({
   session_id,
   nullifier,
-  release_id = 'tokyo2026-capsule-v1',
+  release_id = 'metropolis-capsule-v1',
 }) {
   const sid = String(session_id || '').trim();
   if (!sid) return { ok: false, error: 'missing-session_id' };
@@ -83,7 +83,7 @@ export function enrollWinnerWithSession({
   const record = {
     ticket,
     nullifier: key,
-    release_id: String(release_id || 'tokyo2026-capsule-v1'),
+    release_id: String(release_id || 'metropolis-capsule-v1'),
     session_id: sid,
     enrolled_at: nowMs(),
     claimed_at: null,

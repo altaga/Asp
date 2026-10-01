@@ -87,7 +87,7 @@ export function AspDemoFooter({ onReset, resetBusy, resetLabel = 'Reset demo' }:
   return (
     <footer style={styles.footer}>
       <div style={styles.footerLeft}>
-        <span style={styles.footerMuted}>Tokyo 2026</span>
+        <span style={styles.footerMuted}>Metropolis 2026</span>
         {variant.release === 'motor' ? (
           <>
             <span style={styles.dot} aria-hidden>

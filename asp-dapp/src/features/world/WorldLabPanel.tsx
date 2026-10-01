@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { WorldVerifyModal } from './WorldVerifyModal';
 import { theme } from '../../theme/tokens';
 
-const TEST_ACTION = 'asp-release-tokyo2026-capsule-v1';
+const TEST_ACTION = 'asp-release-metropolis-capsule-v1';
 
 /**
  * Isolated World Selfie lab — no petition, hire, or wallet required.

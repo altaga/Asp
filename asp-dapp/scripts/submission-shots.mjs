@@ -1,6 +1,6 @@
 /**
- * Local ETHGlobal doc screenshots — Asp surfaces only.
- * Usage: node scripts/ethglobal-shots.mjs [baseUrl]
+ * Local Metropolis submission screenshots — Asp surfaces only.
+ * Usage: node scripts/submission-shots.mjs [baseUrl]
  */
 import { chromium } from 'playwright';
 import fs from 'node:fs';

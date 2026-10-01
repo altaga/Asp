@@ -7,7 +7,7 @@ import type { NftDrop } from './nftTypes';
 export const COLORWAYS: { name: string; a: string; b: string }[] = [
   { name: 'Monad Violet', a: '#836EF9', b: '#3A2BB8' },
   { name: 'Sakura', a: '#FF7AA2', b: '#B5179E' },
-  { name: 'Tokyo Red', a: '#FF3B30', b: '#8B0000' },
+  { name: 'Metro Red', a: '#FF3B30', b: '#8B0000' },
   { name: 'Matcha', a: '#8BD48E', b: '#2E7D32' },
   { name: 'Harbor Blue', a: '#3FA9F5', b: '#1A4F9C' },
   { name: 'Gold Leaf', a: '#FFC94A', b: '#C77700' },
@@ -40,7 +40,7 @@ export function capsuleSvg(tokenId: number) {
     "<rect x='124' y='193' width='152' height='14' rx='7' fill='#111111'/>" +
     "<ellipse cx='170' cy='140' rx='12' ry='30' fill='#FFFFFF' fill-opacity='.35'/>" +
     `<text x='200' y='266' text-anchor='middle' ${font} font-weight='800' font-size='34' fill='#111111'>ASP</text></g>` +
-    `<text x='28' y='46' ${font} font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>TOKYO 2026 / LIMITED</text>` +
+    `<text x='28' y='46' ${font} font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>METROPOLIS / LIMITED</text>` +
     `<text x='372' y='46' text-anchor='end' ${font} font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>MONAD</text>` +
     `<text x='28' y='368' ${font} font-size='34' font-weight='800' fill='#FFFFFF'>#${ed}<tspan font-size='16' fill-opacity='.55' dx='8'>/ ${MAX_EDITIONS}</tspan></text>` +
     `<text x='372' y='366' text-anchor='end' ${font} font-size='13' font-weight='700' letter-spacing='2' fill='${a}'>${name.toUpperCase()}</text>` +

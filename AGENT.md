@@ -73,8 +73,8 @@ flowchart TB
 
 | Symbol | Value | Where |
 |---|---|---|
-| `ENROLL_ACTION` | `asp-enroll-tokyo2026-capsule-v1` | `asp-dapp/src/features/hire/gateway.ts` |
-| `RELEASE_ID` | `tokyo2026-capsule-v1` | same |
+| `ENROLL_ACTION` | `asp-enroll-metropolis-capsule-v1` | `asp-dapp/src/features/hire/gateway.ts` |
+| `RELEASE_ID` | `metropolis-capsule-v1` | same |
 | Ticket format | `WIN-` + 6 alnum uppercase | `winners.js` `makeTicket()` |
 | Petition id prefix | `pet_` | `store.js` `makeId('pet')` |
 | Demo ticket storage key | `asp.demoTicket.v1` | `aspDemoTicket.ts` (browser only; not auth) |
@@ -129,7 +129,7 @@ Fields (record):
   "target_hardware_id": "Sub_…",
   "command": ["DISPENSE_ONCE"],
   "max_amount": "string",
-  "release_id": "tokyo2026-capsule-v1|null",
+  "release_id": "metropolis-capsule-v1|null",
   "status": "pending_human|authorized|…",
   "proof_of_human": { "required": true, "freshness_seconds": 300, "release_id": "…" },
   "release_action": "asp-release-{release_id}|null",
@@ -149,7 +149,7 @@ Fields (record):
 {
   "ticket": "WIN-ABC123",
   "nullifier": "lowercase-hex-or-string",
-  "release_id": "tokyo2026-capsule-v1",
+  "release_id": "metropolis-capsule-v1",
   "session_id": null,
   "enrolled_at": 0,
   "claimed_at": null,
@@ -206,7 +206,7 @@ Do NOT prefer gateway-side World verify for live demo (token staleness → 403).
 |---|---|
 | FILE | `asp-dapp/src/app/api/world/poh-verify+api.ts` |
 | BODY | `{ petition_id, idkitResponse, action?, signal?, ticket? }` |
-| DEFAULT_ACTION | `asp-enroll-tokyo2026-capsule-v1` |
+| DEFAULT_ACTION | `asp-enroll-metropolis-capsule-v1` |
 | STEPS | portal verify → `POST {GATEWAY}/asp/proof-of-human/authorize-preverified` |
 | OUT | `{ ok, via:'dapp-verify+preverified-authorize', …gateway }` |
 | FAIL | `missing-petition_id`, `world-verify-failed`, `missing-nullifier`, `authorize-failed`, `claim_already_used` |
@@ -269,7 +269,7 @@ Gateway calls `verifyWorldProof` then authorize. Prefer dapp `poh-verify` in pro
 ```json
 {
   "nullifier": "…",
-  "release_id": "tokyo2026-capsule-v1",
+  "release_id": "metropolis-capsule-v1",
   "preverified": true
 }
 ```

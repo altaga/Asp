@@ -2,7 +2,7 @@
   "name": "asp-nft",
   "version": "1.0.0",
   "private": true,
-  "description": "Asp Tokyo 2026 Capsule — limited NFT drop for the /test claim path (Monad).",
+  "description": "Asp Metropolis Capsule — limited NFT drop for the /test claim path (Monad).",
   "type": "module",
   "scripts": {
     "wallet": "node scripts/new-wallet.mjs",

@@ -15,7 +15,7 @@
         "proof_of_human": {
           "required": true,
           "credential": "world_id_agents",
-          "release_id": "tokyo2026-capsule-v1",
+          "release_id": "metropolis-capsule-v1",
           "max_claims_per_person": 1,
           "freshness_seconds": 300,
           "binds_to": ["target_hardware_id", "command", "max_amount", "requester"]

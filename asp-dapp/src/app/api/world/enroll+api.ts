@@ -8,7 +8,7 @@ const GATEWAY =
   (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_GATEWAY_URL) ||
   'https://gateway.example.com';
 
-const DEFAULT_ACTION = 'asp-enroll-tokyo2026-capsule-v1';
+const DEFAULT_ACTION = 'asp-enroll-metropolis-capsule-v1';
 
 export async function POST(request: Request): Promise<Response> {
   try {
@@ -121,7 +121,7 @@ export async function POST(request: Request): Promise<Response> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         nullifier: String(nullifier),
-        release_id: 'tokyo2026-capsule-v1',
+        release_id: 'metropolis-capsule-v1',
         preverified: true,
       }),
     });

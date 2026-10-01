@@ -69,8 +69,8 @@ export async function verifyProofOfHuman(
   return data;
 }
 
-export const ENROLL_ACTION = 'asp-enroll-tokyo2026-capsule-v1';
-export const RELEASE_ID = 'tokyo2026-capsule-v1';
+export const ENROLL_ACTION = 'asp-enroll-metropolis-capsule-v1';
+export const RELEASE_ID = 'metropolis-capsule-v1';
 
 /** Preferred signup: Selfie Check (legacy) uniqueness → ticket bound to nullifier. */
 export async function enrollWinner(

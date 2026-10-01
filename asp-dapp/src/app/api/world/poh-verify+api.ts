@@ -7,7 +7,7 @@ const GATEWAY =
   (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_GATEWAY_URL) ||
   'https://gateway.example.com';
 
-const DEFAULT_ACTION = 'asp-enroll-tokyo2026-capsule-v1';
+const DEFAULT_ACTION = 'asp-enroll-metropolis-capsule-v1';
 
 async function verifyWithWorld(idkitResponse: any, action: string, signal: string) {
   const rpId = (process.env.WORLD_RP_ID || process.env.EXPO_PUBLIC_WORLD_RP_ID || '').trim();

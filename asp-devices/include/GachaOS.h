@@ -49,7 +49,7 @@ class GachaOS {
 
   void boot() {
     Serial.println("\n====================================");
-    Serial.println(" ASP GACHA — Tokyo node");
+    Serial.println(" ASP GACHA — Metropolis node");
     Serial.println("====================================");
     Serial.println("Node ID: " + unique_client_id);
 
