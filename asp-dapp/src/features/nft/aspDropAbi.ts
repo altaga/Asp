@@ -33,7 +33,14 @@ export const ASP_DROP_ABI = [
   },
   {
     type: 'function',
-    name: 'MAX_SUPPLY',
+    name: 'maxSupply',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'nextRelease',
     stateMutability: 'view',
     inputs: [],
     outputs: [{ name: '', type: 'uint256' }],

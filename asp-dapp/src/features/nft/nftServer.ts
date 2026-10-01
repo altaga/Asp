@@ -6,7 +6,7 @@ import { createPublicClient, createWalletClient, getAddress, http, isAddress, ke
 import { privateKeyToAccount } from 'viem/accounts';
 import { monad, monadTestnet } from 'viem/chains';
 import { ASP_DROP_ABI } from './aspDropAbi';
-import type { NftDrop } from './nftTypes';
+import type { DropStock, NftDrop } from './nftTypes';
 
 type DropError = Error & { status?: number; code?: string };
 
@@ -66,7 +66,7 @@ async function describeToken(cfg: ReturnType<typeof config>, tokenId: bigint, mi
   const [uri, owner, max] = await Promise.all([
     cfg.publicClient.readContract({ address: cfg.contract, abi: ASP_DROP_ABI, functionName: 'tokenURI', args: [tokenId] }),
     cfg.publicClient.readContract({ address: cfg.contract, abi: ASP_DROP_ABI, functionName: 'ownerOf', args: [tokenId] }),
-    cfg.publicClient.readContract({ address: cfg.contract, abi: ASP_DROP_ABI, functionName: 'MAX_SUPPLY' }),
+    cfg.publicClient.readContract({ address: cfg.contract, abi: ASP_DROP_ABI, functionName: 'maxSupply' }),
   ]);
   const meta = decodeMetadata(uri);
   const colorway = meta.attributes?.find((a) => a.trait_type === 'Colorway')?.value;
@@ -84,6 +84,15 @@ async function describeToken(cfg: ReturnType<typeof config>, tokenId: bigint, mi
   };
 }
 
+/** What the dispenser shows: run size and the edition that comes out next (`null` = sold out). */
+export async function readDropStock(): Promise<DropStock> {
+  const cfg = config();
+  const read = (functionName: 'maxSupply' | 'remaining' | 'nextRelease') =>
+    cfg.publicClient.readContract({ address: cfg.contract, abi: ASP_DROP_ABI, functionName });
+  const [total, remaining, next] = await Promise.all([read('maxSupply'), read('remaining'), read('nextRelease')]);
+  return { total: Number(total), remaining: Number(remaining), next: remaining > 0n ? Number(next) : null };
+}
+
 /** One drop per paid nonce, enforced on-chain by tokenOfClaim — retries return the same token. */
 export async function releaseNftForPayment(nonce: string): Promise<NftDrop> {
   const cfg = config();
@@ -96,7 +105,7 @@ export async function releaseNftForPayment(nonce: string): Promise<NftDrop> {
   if (existing > 0n) return describeToken(cfg, existing, null, true);
 
   const remaining = await cfg.publicClient.readContract({ address: cfg.contract, abi: ASP_DROP_ABI, functionName: 'remaining' });
-  if (remaining === 0n) throw dropError(410, 'sold-out', 'All limited capsules are gone.');
+  if (remaining === 0n) throw dropError(410, 'sold-out', 'All limited editions are gone.');
 
   try {
     const { request } = await cfg.publicClient.simulateContract({

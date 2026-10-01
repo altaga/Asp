@@ -7,11 +7,13 @@ const { publicClient, walletClient } = clients();
 
 const [minted, max] = await Promise.all([
   publicClient.readContract({ address, abi, functionName: 'totalMinted' }),
-  publicClient.readContract({ address, abi, functionName: 'MAX_SUPPLY' }),
+  publicClient.readContract({ address, abi, functionName: 'maxSupply' }),
 ]);
-const count = max - minted;
-if (count === 0n) {
-  console.log(`All ${max} editions already minted.`);
+const room = max - minted;
+const asked = process.argv[2] ? BigInt(process.argv[2]) : room;
+const count = asked < room ? asked : room;
+if (count <= 0n) {
+  console.log(`All ${max} editions already minted — raise the cap with \`npm run set-max -- <n>\` first.`);
   process.exit(0);
 }
 
@@ -28,4 +30,4 @@ const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 60
 if (receipt.status !== 'success') throw new Error('Mint reverted');
 
 const remaining = await publicClient.readContract({ address, abi, functionName: 'remaining' });
-console.log(`Minted ${count} editions into the contract — ${remaining} ready to drop.`);
+console.log(`Minted ${count} editions into the contract — ${remaining} ready to drop (cap ${max}).`);

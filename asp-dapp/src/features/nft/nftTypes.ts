@@ -11,3 +11,10 @@ export type NftDrop = {
   tokenUrl: string;
   already: boolean;
 };
+
+export type DropStock = {
+  total: number;
+  remaining: number;
+  /** Edition the next paid claim receives; `null` once sold out. */
+  next: number | null;
+};

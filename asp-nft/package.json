@@ -9,7 +9,8 @@
     "compile": "node scripts/compile.mjs",
     "balance": "node --env-file=.env scripts/balance.mjs",
     "deploy": "node --env-file=.env scripts/deploy.mjs",
-    "mint": "node --env-file=.env scripts/mint.mjs"
+    "mint": "node --env-file=.env scripts/mint.mjs",
+    "set-max": "node --env-file=.env scripts/set-max.mjs"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.1.0",

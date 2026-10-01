@@ -6,27 +6,39 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-/// @title Asp Metropolis Capsule — 10 limited editions, art fully on-chain.
+/// @title Asp Metropolis Capsule — limited editions, art fully on-chain.
 /// @notice Editions are minted into the contract and only leave through `release`, which the
 ///         Asp drop server calls once per settled USDC payment (keyed by `claimId`).
+///         The cap is owner-adjustable for the POC, but can never drop below what's already minted.
 contract AspDrop is ERC721, Ownable {
     using Strings for uint256;
 
-    uint256 public constant MAX_SUPPLY = 10;
+    uint256 public maxSupply;
     uint256 public totalMinted;
     uint256 public nextRelease = 1;
     mapping(bytes32 => uint256) public tokenOfClaim;
 
     event Released(bytes32 indexed claimId, address indexed to, uint256 indexed tokenId);
+    event MaxSupplyChanged(uint256 previous, uint256 current);
 
     error SoldOut();
     error AlreadyReleased();
     error NothingToRelease();
+    error BelowMinted(uint256 minted);
 
-    constructor(address owner_) ERC721("Asp Metropolis Capsule", "ASPCAP") Ownable(owner_) {}
+    constructor(address owner_, uint256 maxSupply_) ERC721("Asp Metropolis Capsule", "ASPCAP") Ownable(owner_) {
+        maxSupply = maxSupply_;
+        emit MaxSupplyChanged(0, maxSupply_);
+    }
+
+    function setMaxSupply(uint256 next) external onlyOwner {
+        if (next < totalMinted) revert BelowMinted(totalMinted);
+        emit MaxSupplyChanged(maxSupply, next);
+        maxSupply = next;
+    }
 
     function mintEditions(uint256 count) external onlyOwner {
-        if (totalMinted + count > MAX_SUPPLY) revert SoldOut();
+        if (totalMinted + count > maxSupply) revert SoldOut();
         for (uint256 i; i < count; i++) {
             _mint(address(this), ++totalMinted);
         }
@@ -49,11 +61,12 @@ contract AspDrop is ERC721, Ownable {
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         _requireOwned(tokenId);
         (string memory name, , ) = _colorway(tokenId);
+        string memory cap = maxSupply.toString();
         string memory json = string.concat(
             '{"name":"Asp Capsule #', tokenId.toString(),
-            '","description":"One of 10 limited capsules from the Asp Metropolis gachapon. Proven human with World ID, paid in USDC on Monad.",',
+            '","description":"One of ', cap, ' limited capsules from the Asp Metropolis dispenser. Proven human with World ID, paid in USDC on Monad.",',
             '"image":"data:image/svg+xml;base64,', Base64.encode(bytes(_svg(tokenId))),
-            '","attributes":[{"trait_type":"Edition","value":"', tokenId.toString(), ' / 10"},',
+            '","attributes":[{"trait_type":"Edition","value":"', tokenId.toString(), ' / ', cap, '"},',
             '{"trait_type":"Colorway","value":"', name, '"},',
             '{"trait_type":"Drop","value":"Monad Metropolis 2026"},{"trait_type":"Chain","value":"Monad"}]}'
         );
@@ -83,7 +96,7 @@ contract AspDrop is ERC721, Ownable {
         return string(b);
     }
 
-    function _svg(uint256 id) internal pure returns (string memory) {
+    function _svg(uint256 id) internal view returns (string memory) {
         (string memory name, string memory a, string memory b) = _colorway(id);
         return string.concat(_svgArt(a, b), _svgText(id, name, a));
     }
@@ -107,13 +120,13 @@ contract AspDrop is ERC721, Ownable {
         );
     }
 
-    function _svgText(uint256 id, string memory name, string memory a) internal pure returns (string memory) {
+    function _svgText(uint256 id, string memory name, string memory a) internal view returns (string memory) {
         string memory ed = id < 10 ? string.concat("0", id.toString()) : id.toString();
         return string.concat(
             "<text x='28' y='46' font-family='Helvetica,Arial,sans-serif' font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>METROPOLIS / LIMITED</text>",
             "<text x='372' y='46' text-anchor='end' font-family='Helvetica,Arial,sans-serif' font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>MONAD</text>",
             "<text x='28' y='368' font-family='Helvetica,Arial,sans-serif' font-size='34' font-weight='800' fill='#FFFFFF'>#", ed,
-            "<tspan font-size='16' fill-opacity='.55' dx='8'>/ 10</tspan></text>",
+            "<tspan font-size='16' fill-opacity='.55' dx='8'>/ ", maxSupply.toString(), "</tspan></text>",
             "<text x='372' y='366' text-anchor='end' font-family='Helvetica,Arial,sans-serif' font-size='13' font-weight='700' letter-spacing='2' fill='", a,
             "'>", _upper(name), "</text></svg>"
         );

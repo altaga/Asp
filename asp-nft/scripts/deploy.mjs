@@ -6,12 +6,14 @@ if (process.env.ASP_DROP_ADDRESS && !process.argv.includes('--force')) {
   process.exit(0);
 }
 
+const maxSupply = BigInt(process.env.DROP_MAX_SUPPLY || 20);
+
 const { account, publicClient, walletClient } = clients();
 const { abi, bytecode } = artifact();
 const balance = await publicClient.getBalance({ address: account.address });
-console.log(`Minter ${account.address} has ${formatEther(balance)} MON`);
+console.log(`Minter ${account.address} has ${formatEther(balance)} MON — deploying with maxSupply ${maxSupply}`);
 
-const hash = await walletClient.deployContract({ abi, bytecode, args: [account.address] });
+const hash = await walletClient.deployContract({ abi, bytecode, args: [account.address, maxSupply] });
 console.log('Deploy tx:', `${EXPLORER}/tx/${hash}`);
 const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 60_000 });
 if (receipt.status !== 'success' || !receipt.contractAddress) throw new Error('Deploy reverted');
