@@ -7,7 +7,6 @@ import { useDropStock } from '../nft/useDropStock';
 import { WorldVerifyModal } from '../world/WorldVerifyModal';
 import { clearDemoTicket, readDemoTicket, saveDemoTicket } from './aspDemoTicket';
 import { ClaimActions } from './ClaimActions';
-import { ClaimDetails } from './ClaimDetails';
 import { ClaimOutcome } from './ClaimOutcome';
 import { ClaimTicketCard } from './ClaimTicketCard';
 import { CLAIM_STEPS, claimLockLabel, claimMachineState, claimScreen, claimStep, claimTitle } from './claimView';
@@ -107,7 +106,6 @@ export function CheckoutPage() {
               {!used ? <ClaimActions flow={flow} /> : null}
               {phase === 'awaiting_phone_pay' && flow.kioskPay ? <WalletPayCard payment={flow.kioskPay} onTx={flow.submitTx} /> : null}
               <ClaimOutcome flow={flow} />
-              <ClaimDetails isNft={isNft} petitionId={flow.activePoh?.petition_id} />
             </>
           )}
         </section>

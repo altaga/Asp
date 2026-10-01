@@ -63,8 +63,6 @@ export const POP_LAYOUT_CSS = `
 .pop-error{margin:0 0 14px;padding:12px;border-radius:14px;background:rgba(232,17,45,.07);color:${pop.redDeep};font-size:12px;
   font-family:${pop.mono};white-space:pre-wrap;word-break:break-word}
 .pop-status{margin:0 0 14px;font-size:16px;line-height:1.5;font-weight:700}
-.pop-details{margin-top:4px}
-.pop-details summary{cursor:pointer;font-size:13px;font-weight:700;color:${pop.muted}}
 .pop-input{width:100%;padding:10px 16px;border:2px solid rgba(35,24,21,.12);border-radius:18px;background:${pop.cream};min-width:0}
 
 @media (max-width:960px){
