@@ -1,4 +1,4 @@
-/** Gashapon Pop — warm toy-shop palette. Red leads, Monad violet is the accent. */
+/** Dispenser — warm shop palette. Red leads, Monad violet is the accent. */
 export const pop = {
   red: '#E8112D',
   redDeep: '#B80A20',

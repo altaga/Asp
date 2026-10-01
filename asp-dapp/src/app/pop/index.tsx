@@ -1,7 +1,7 @@
 import React from 'react';
-import { PopGetPage } from '../../features/gashapon/PopGetPage';
+import { PopGetPage } from '../../features/dispenser/PopGetPage';
 
-/** /pop — Gashapon Pop design proposal for Get. Sample data only. */
+/** /pop — dispenser design proposal for Get. Sample data only. */
 export default function PopGetRoute() {
   return <PopGetPage />;
 }

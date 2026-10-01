@@ -1,14 +1,14 @@
 import React from 'react';
-import { CapsuleTicket } from './CapsuleTicket';
+import { DropTicket } from './DropTicket';
 import { PopSteps, type PopStep } from './PopSteps';
 import { SAMPLE_TICKET } from './popSample';
 
 export type GetState = 'ready' | 'verifying' | 'ticket' | 'used';
 
 const STEPS: PopStep[] = [
-  { jp: '本人確認', en: 'Prove human' },
-  { jp: 'チケット', en: 'Get ticket' },
-  { jp: '回す', en: 'Claim & turn' },
+  { jp: '人間証明', en: 'Prove human' },
+  { jp: '整理券', en: 'Get ticket' },
+  { jp: '受け取り', en: 'Pick up' },
 ];
 
 const STEP_INDEX: Record<GetState, number> = { ready: 0, verifying: 0, ticket: 1, used: 2 };
@@ -21,14 +21,14 @@ export function PopGetPanel({ state, onVerify, onNext }: Props) {
     <>
       <p className="pop-eyebrow"><b lang="ja">限定ドロップ</b> Limited drop</p>
       <h1 className="pop-title">
-        {state === 'used' ? 'Already got yours.' : state === 'ticket' ? <>You&apos;re in. <em>Keep it.</em></> : <>One human.<br /><em>One capsule.</em></>}
+        {state === 'used' ? 'Already got yours.' : state === 'ticket' ? <>You&apos;re in. <em>It&apos;s held.</em></> : <>One human.<br /><em>One item.</em></>}
       </h1>
       <p className="pop-lede">
         {state === 'used'
-          ? 'This World ID already claimed its capsule. Same person, same ticket — no second try.'
+          ? 'This World ID already took its item. Same person, same ticket — no second try.'
           : state === 'ticket'
-            ? 'This ticket is welded to your World ID. Bring it to the machine — nobody else can use it.'
-            : 'Bots buy with wallets. Fans prove they’re human. Confirm with World ID and the machine saves one capsule for you.'}
+            ? 'This ticket is welded to your World ID and holds the next item in line. Bring it to the dispenser — nobody else can use it.'
+            : 'Ten made, never restocked. Bots buy with wallets; fans prove they’re human. Confirm with World ID and the dispenser holds one for you.'}
       </p>
       <PopSteps steps={STEPS} current={STEP_INDEX[state]} />
 
@@ -50,14 +50,14 @@ export function PopGetPanel({ state, onVerify, onNext }: Props) {
       ) : null}
 
       {state === 'ticket' || state === 'used' ? (
-        <CapsuleTicket code={SAMPLE_TICKET} used={state === 'used'}>
+        <DropTicket code={SAMPLE_TICKET} used={state === 'used'}>
           {state === 'ticket' ? (
             <div className="pop-row" style={{ marginTop: 6 }}>
               <button type="button" className="pop-btn pop-btn-ghost">Copy</button>
               <a className="pop-btn" href="/pop/claim">Claim →</a>
             </div>
           ) : null}
-        </CapsuleTicket>
+        </DropTicket>
       ) : null}
 
       {state === 'ticket' || state === 'used' ? (

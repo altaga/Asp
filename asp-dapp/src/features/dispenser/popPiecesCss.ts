@@ -1,25 +1,24 @@
 import { pop } from './popTheme';
 
-/** Daishi lineup, capsule ticket, machine, reveal and the proposal switcher. */
+/** Stock meter, drop ticket, dispenser, reveal and the proposal switcher. */
 export const POP_PIECES_CSS = `
-.pop-daishi{width:100%;max-width:560px;background:${pop.paper};border-radius:26px;padding:18px 22px 20px;position:relative;overflow:hidden;
+.pop-stock{width:100%;max-width:560px;background:${pop.paper};border-radius:26px;padding:18px 22px 18px;
   box-shadow:0 2px 0 ${pop.line},0 14px 30px rgba(35,24,21,.06)}
-.pop-daishi::before{content:"";position:absolute;inset:0 auto auto 0;width:64px;height:64px;background:${pop.red};
-  clip-path:polygon(0 0,100% 0,0 100%)}
-.pop-daishi-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px;padding-left:26px}
-.pop-daishi-title{display:flex;flex-direction:column;gap:2px}
-.pop-daishi-title b{font-size:18px;font-weight:900}
-.pop-daishi-title span{font-size:12px;color:${pop.muted};font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.pop-stock-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+.pop-stock-title{display:flex;flex-direction:column;gap:2px}
+.pop-stock-title b{font-size:18px;font-weight:900}
+.pop-stock-title span{font-size:12px;color:${pop.muted};font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .pop-left{display:flex;align-items:baseline;gap:6px;font-weight:900}
 .pop-left small{font-size:13px;color:${pop.muted}}
 .pop-left strong{font-size:40px;color:${pop.red};line-height:1}
 .pop-left span{font-size:18px;color:${pop.muted}}
-.pop-lineup{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin:0;padding:0;list-style:none}
-.pop-slot{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;color:${pop.muted};position:relative}
-.pop-slot[data-gone=true] svg{filter:grayscale(1);opacity:.35}
-.pop-slot[data-yours=true]::after{content:"YOU";position:absolute;top:-10px;padding:1px 6px;border-radius:999px;font-size:9px;
-  background:${pop.violet};color:#fff}
-.pop-slot[data-yours=true] svg{filter:drop-shadow(0 0 8px rgba(131,110,249,.8))}
+.pop-stock-bar{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin:0;padding:0;list-style:none}
+.pop-stock-bar li{height:14px;border-radius:5px}
+.pop-stock-bar li[data-gone=true]{background:rgba(35,24,21,.1)!important}
+.pop-stock-bar li[data-next=true]{box-shadow:0 0 0 2.5px ${pop.paper},0 0 0 4.5px ${pop.violet}}
+.pop-stock-next{margin:14px 0 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:14px;color:${pop.muted}}
+.pop-stock-next b{color:${pop.ink}}
+.pop-stock-next span{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 
 .pop-ticket{display:flex;border-radius:24px;overflow:hidden;background:${pop.paper};box-shadow:0 2px 0 ${pop.line},0 18px 40px rgba(35,24,21,.08)}
 .pop-ticket-stub{flex:none;width:120px;background:${pop.red};color:#fff;display:flex;flex-direction:column;align-items:center;
@@ -37,14 +36,12 @@ export const POP_PIECES_CSS = `
 
 .pop-machine-wrap{position:relative;width:100%;max-width:clamp(260px,calc((100vh - 330px) * .73),380px)}
 .pop-machine{width:100%;height:auto;display:block;overflow:visible}
-.pop-handle{cursor:grab;touch-action:none;outline:none}
-.pop-handle:active{cursor:grabbing}
-.pop-handle[data-locked=true]{cursor:not-allowed}
-.pop-handle:focus-visible .pop-handle-disc{stroke:${pop.violet};stroke-width:6}
-.pop-turn-hint{position:absolute;right:-6px;top:58%;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:900;
-  color:${pop.red};font-size:15px;pointer-events:none}
-.pop-turn-hint small{font-size:12px;color:${pop.muted}}
-.pop-lock{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);padding:8px 14px;border-radius:999px;background:rgba(35,24,21,.82);
+.pop-push{cursor:pointer;outline:none}
+.pop-push[data-ready=false]{cursor:not-allowed}
+.pop-push:focus-visible .pop-push-disc{stroke:${pop.violet};stroke-width:5}
+.pop-push-cap{transform-box:fill-box;transform-origin:center;transition:transform .08s ease}
+.pop-push[data-ready=true]:active .pop-push-cap,.pop-push[data-pressed=true] .pop-push-cap{transform:scale(.9)}
+.pop-lock{position:absolute;left:39%;top:45%;transform:translate(-50%,-50%);padding:8px 14px;border-radius:999px;background:rgba(35,24,21,.82);
   color:#fff;font-size:13px;font-weight:700;white-space:nowrap;pointer-events:none}
 
 .pop-reveal{position:relative;display:grid;grid-template-columns:220px 1fr;gap:22px;align-items:center}
@@ -62,8 +59,6 @@ export const POP_PIECES_CSS = `
 .pop-meta dd{margin:2px 0 0;font-family:${pop.mono};font-size:14px;font-weight:700}
 .pop-meta a{color:${pop.violet}}
 .pop-wallet-tip{margin-top:16px;padding:12px 14px;border-radius:16px;background:rgba(131,110,249,.08);font-size:14px;line-height:1.5}
-.pop-confetti{position:absolute;inset:-40px;pointer-events:none;overflow:visible}
-.pop-confetti i{position:absolute;left:50%;top:40%;width:12px;height:12px;border-radius:50%}
 
 .pop-switcher{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:6px;
   max-width:calc(100vw - 24px);overflow-x:auto;padding:7px;border-radius:999px;background:rgba(35,24,21,.92);color:#fff;

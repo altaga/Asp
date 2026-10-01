@@ -23,7 +23,7 @@ export function colorwayFor(tokenId: number) {
   return COLORWAYS[(tokenId - 1) % COLORWAYS.length];
 }
 
-export function capsuleSvg(tokenId: number) {
+export function capsuleSvg(tokenId: number, total = MAX_EDITIONS) {
   const { name, a, b } = colorwayFor(tokenId);
   const ed = String(tokenId).padStart(2, '0');
   const font = "font-family='Helvetica,Arial,sans-serif'";
@@ -42,7 +42,7 @@ export function capsuleSvg(tokenId: number) {
     `<text x='200' y='266' text-anchor='middle' ${font} font-weight='800' font-size='34' fill='#111111'>ASP</text></g>` +
     `<text x='28' y='46' ${font} font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>METROPOLIS / LIMITED</text>` +
     `<text x='372' y='46' text-anchor='end' ${font} font-size='13' font-weight='700' letter-spacing='3' fill='#FFFFFF' fill-opacity='.7'>MONAD</text>` +
-    `<text x='28' y='368' ${font} font-size='34' font-weight='800' fill='#FFFFFF'>#${ed}<tspan font-size='16' fill-opacity='.55' dx='8'>/ ${MAX_EDITIONS}</tspan></text>` +
+    `<text x='28' y='368' ${font} font-size='34' font-weight='800' fill='#FFFFFF'>#${ed}<tspan font-size='16' fill-opacity='.55' dx='8'>/ ${total}</tspan></text>` +
     `<text x='372' y='366' text-anchor='end' ${font} font-size='13' font-weight='700' letter-spacing='2' fill='${a}'>${name.toUpperCase()}</text>` +
     '</svg>'
   );
@@ -53,12 +53,12 @@ export function svgDataUri(svg: string) {
 }
 
 /** Preview drop for `/test/claim?preview=1` — looks like a real one, nothing on-chain. */
-export function previewNft(tokenId = 1): NftDrop {
+export function previewNft(tokenId = 1, total = MAX_EDITIONS): NftDrop {
   return {
     tokenId: String(tokenId),
-    edition: `${tokenId} / ${MAX_EDITIONS}`,
+    edition: `${tokenId} / ${total}`,
     name: `Asp Capsule #${tokenId}`,
-    image: svgDataUri(capsuleSvg(tokenId)),
+    image: svgDataUri(capsuleSvg(tokenId, total)),
     colorway: colorwayFor(tokenId).name,
     owner: '0x0000000000000000000000000000000000000000',
     contract: '0x0000000000000000000000000000000000000000',

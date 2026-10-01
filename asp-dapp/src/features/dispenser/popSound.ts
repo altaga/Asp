@@ -1,4 +1,4 @@
-/** Synthesised toy-machine sounds (no audio files) + haptics. Needs a user gesture first. */
+/** Synthesised dispenser sounds (no audio files) + haptics. Needs a user gesture first. */
 let ctx: AudioContext | null = null;
 let muted = false;
 
@@ -36,10 +36,10 @@ function tone(freq: number, seconds: number, type: OscillatorType, gain: number,
 }
 
 export const popSound = {
-  tick: () => tone(1500, 0.035, 'square', 0.035),
+  press: () => tone(1200, 0.05, 'square', 0.05, 700),
+  whirr: () => tone(90, 0.75, 'sawtooth', 0.04, 140),
   thud: () => tone(170, 0.25, 'sine', 0.3, 50),
-  pop: () => tone(520, 0.12, 'triangle', 0.12, 1400),
-  chime: () => [784, 988, 1319, 1568].forEach((f, i) => setTimeout(() => tone(f, 0.3, 'triangle', 0.07), i * 85)),
+  chime: () => [784, 988, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.3, 'triangle', 0.07), i * 110)),
 };
 
 export function buzz(pattern: number | number[]) {

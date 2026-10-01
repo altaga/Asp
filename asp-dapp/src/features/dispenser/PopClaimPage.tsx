@@ -1,19 +1,18 @@
 import React, { useCallback, useState } from 'react';
-import { COLORWAYS } from '../nft/nftArt';
-import { DaishiCard } from './DaishiCard';
+import { DispenserMachine, type MachineState } from './DispenserMachine';
 import { PopClaimPanel, type ClaimMode, type ClaimState } from './PopClaimPanels';
-import { PopMachine, type MachineState } from './PopMachine';
-import { PopShell } from './PopShell';
-import { buzz, popSound } from './popSound';
+import { ProposalFrame } from './ProposalFrame';
+import { popSound } from './popSound';
 import { ProposalSwitcher, type ProposalOption } from './ProposalSwitcher';
-import { SAMPLE_EDITION, SAMPLE_GONE_BEFORE } from './popSample';
+import { StockMeter } from './StockMeter';
+import { SAMPLE_EDITION, SAMPLE_TOTAL } from './popSample';
 
 const STATES: ProposalOption<ClaimState>[] = [
   { id: 'ticket', label: 'Ticket' },
   { id: 'verify', label: 'World ID' },
   { id: 'pay', label: 'Pay' },
-  { id: 'turn', label: 'Turn' },
-  { id: 'reveal', label: 'NFT reveal' },
+  { id: 'dispense', label: 'Dispense' },
+  { id: 'reveal', label: 'NFT pickup' },
   { id: 'motor', label: 'Kiosk drop' },
   { id: 'used', label: 'Already claimed' },
 ];
@@ -25,57 +24,58 @@ const LOCK_LABEL: Partial<Record<ClaimState, string>> = {
   used: 'Already claimed',
 };
 
-function machineFor(state: ClaimState, dropped: boolean): MachineState {
-  if (state === 'reveal') return 'open';
-  if (state === 'motor' || (state === 'turn' && dropped)) return 'dropped';
-  return state === 'turn' ? 'ready' : 'locked';
+function machineFor(state: ClaimState, landed: boolean): MachineState {
+  if (state === 'reveal') return 'collected';
+  if (state === 'motor' || (state === 'dispense' && landed)) return 'dropped';
+  return state === 'dispense' ? 'ready' : 'locked';
 }
 
-/** /pop/claim — Gashapon Pop proposal for Claim, covering both the NFT drop and the kiosk motor. */
+/** /pop/claim — dispenser proposal for Claim, covering both the NFT drop and the kiosk motor. */
 export function PopClaimPage() {
   const [state, setState] = useState<ClaimState>('ticket');
   const [mode, setMode] = useState<ClaimMode>('nft');
-  const [dropped, setDropped] = useState(false);
+  const [landed, setLanded] = useState(false);
   const [run, setRun] = useState(0);
-  const [autoTurn, setAutoTurn] = useState(0);
+  const [press, setPress] = useState(0);
 
   const go = useCallback((next: ClaimState) => {
-    setDropped(false);
-    setAutoTurn(0);
+    setLanded(false);
+    setPress(0);
     setRun((r) => r + 1);
     setState(next);
     if (next === 'reveal') popSound.chime();
   }, []);
 
-  const onTurned = useCallback(() => {
-    setDropped(true);
-    popSound.thud();
-    buzz([20, 40, 60]);
+  const onDispensed = useCallback(() => {
+    setLanded(true);
     setTimeout(() => {
       if (mode === 'motor') return setState('motor');
-      popSound.pop();
       setState('reveal');
-      setTimeout(() => popSound.chime(), 350);
-    }, 1500);
+      popSound.chime();
+    }, 900);
   }, [mode]);
 
   const got = state === 'reveal' || state === 'motor';
   return (
-    <PopShell active="claim" title="Asp · Claim (proposal)">
+    <ProposalFrame active="claim" title="Asp · Claim (proposal)">
       <main className="pop-stage">
-        <section className="pop-hero" aria-label="Machine">
-          <PopMachine
+        <section className="pop-hero" aria-label="Dispenser">
+          <DispenserMachine
             key={run}
-            state={machineFor(state, dropped)}
+            state={machineFor(state, landed)}
+            look={mode === 'motor' ? 'mystery' : 'edition'}
+            total={SAMPLE_TOTAL}
+            next={SAMPLE_EDITION}
             lockLabel={LOCK_LABEL[state]}
-            capsuleColor={COLORWAYS[SAMPLE_EDITION - 1].a}
-            autoTurnSignal={autoTurn}
-            onTurned={onTurned}
+            dispenseSignal={press}
+            onDispensed={onDispensed}
           />
-          <DaishiCard gone={got ? [...SAMPLE_GONE_BEFORE, SAMPLE_EDITION] : SAMPLE_GONE_BEFORE} yours={got ? SAMPLE_EDITION : null} />
+          {mode === 'nft' ? (
+            <StockMeter total={SAMPLE_TOTAL} next={SAMPLE_EDITION} yours={got ? SAMPLE_EDITION : null} />
+          ) : null}
         </section>
         <section className="pop-panel">
-          <PopClaimPanel state={state} mode={mode} onNext={go} onAutoTurn={() => setAutoTurn((n) => n + 1)} />
+          <PopClaimPanel state={state} mode={mode} onNext={go} onDispense={() => setPress((n) => n + 1)} />
         </section>
       </main>
       <ProposalSwitcher
@@ -88,6 +88,6 @@ export function PopClaimPage() {
           </button>
         }
       />
-    </PopShell>
+    </ProposalFrame>
   );
 }

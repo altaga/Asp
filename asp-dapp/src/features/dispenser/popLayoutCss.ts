@@ -20,6 +20,7 @@ export const POP_LAYOUT_CSS = `
 .pop-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;
   border:1.5px solid ${pop.line};background:${pop.paper};color:${pop.ink}}
 .pop-chip-violet{border-color:rgba(131,110,249,.35);color:${pop.violet};background:rgba(131,110,249,.08)}
+.pop-chip-test{border-color:${pop.ink};background:${pop.ink};color:#fff;letter-spacing:.06em;text-transform:uppercase}
 .pop-icon-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid ${pop.line};background:${pop.paper};cursor:pointer;font-size:16px}
 
 .pop-stage{flex:1;width:100%;max-width:1240px;margin:0 auto;padding:32px 40px 140px;display:grid;
@@ -54,8 +55,17 @@ export const POP_LAYOUT_CSS = `
 .pop-step[data-on=true] .pop-step-num{background:#fff;color:${pop.red};box-shadow:none}
 .pop-step[data-done=true] .pop-step-num{background:${pop.ink};color:#fff;box-shadow:none}
 
-.pop-footer{max-width:1240px;width:100%;margin:0 auto;padding:0 40px 120px;display:flex;justify-content:space-between;
-  font-size:13px;color:${pop.muted}}
+.pop-footer{max-width:1240px;width:100%;margin:0 auto;padding:0 40px 120px;display:flex;justify-content:space-between;align-items:center;
+  gap:12px;font-size:13px;color:${pop.muted}}
+.pop-footer a{color:${pop.muted};font-weight:700;text-decoration:none}
+.pop-footer-reset{border:1.5px solid ${pop.line};background:${pop.paper};color:${pop.muted};border-radius:999px;padding:8px 14px;
+  font-size:13px;font-weight:700;cursor:pointer}
+.pop-error{margin:0 0 14px;padding:12px;border-radius:14px;background:rgba(232,17,45,.07);color:${pop.redDeep};font-size:12px;
+  font-family:${pop.mono};white-space:pre-wrap;word-break:break-word}
+.pop-status{margin:0 0 14px;font-size:16px;line-height:1.5;font-weight:700}
+.pop-details{margin-top:4px}
+.pop-details summary{cursor:pointer;font-size:13px;font-weight:700;color:${pop.muted}}
+.pop-input{width:100%;padding:10px 16px;border:2px solid rgba(35,24,21,.12);border-radius:18px;background:${pop.cream};min-width:0}
 
 @media (max-width:960px){
   .pop-stage{grid-template-columns:1fr;gap:28px;padding:24px 20px 140px}
