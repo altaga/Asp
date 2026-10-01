@@ -1,0 +1,26 @@
+{
+  "name": "asp-gateway",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Asp Gateway — Monad USDC payments, World PoH policy, and MQTT dispense for limited physical releases.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@x402/core": "~2.26.0",
+    "@x402/evm": "~2.26.0",
+    "@x402/express": "~2.26.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mqtt": "^5.15.1",
+    "viem": "^2.50.0",
+    "ws": "^8.18.0"
+  }
+}
