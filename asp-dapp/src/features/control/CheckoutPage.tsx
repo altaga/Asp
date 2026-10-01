@@ -1,81 +1,59 @@
 import React from 'react';
-import { WorldVerifyModal } from '../world/WorldVerifyModal';
-import { GACHA_DEVICE_ID, resetDemoClaims } from '../hire/gateway';
-import { PhaseRail } from './PhaseRail';
-import { WalletPayPanel } from './WalletPayPanel';
-import { explorerTxUrl } from '../wallet/appKit';
-import { AspDemoChrome, AspDemoFooter, aspBrand } from './AspDemoChrome';
-import { clearDemoTicket, readDemoTicket, saveDemoTicket } from './aspDemoTicket';
-import { useDemoVariant } from './demoVariant';
-import { NftDropPreview, NftDropSection } from '../nft/NftDropSection';
+import { ItemReveal } from '../dispenser/ItemReveal';
+import { PopSteps } from '../dispenser/PopSteps';
+import { resetDemoClaims } from '../hire/gateway';
 import { readPendingDrop } from '../nft/pendingDrop';
-import {
-  DEVICE_LABEL,
-  PRICE_USDC,
-  RELEASE_LABEL,
-  useCheckoutFlow,
-} from './useCheckoutFlow';
+import { useDropStock } from '../nft/useDropStock';
+import { WorldVerifyModal } from '../world/WorldVerifyModal';
+import { clearDemoTicket, readDemoTicket, saveDemoTicket } from './aspDemoTicket';
+import { ClaimActions } from './ClaimActions';
+import { ClaimDetails } from './ClaimDetails';
+import { ClaimOutcome } from './ClaimOutcome';
+import { ClaimTicketCard } from './ClaimTicketCard';
+import { CLAIM_STEPS, claimLockLabel, claimMachineState, claimScreen, claimStep, claimTitle } from './claimView';
+import { useDemoVariant } from './demoVariant';
+import { LiveDispenser } from './LiveDispenser';
+import { LiveFrame } from './LiveFrame';
+import { usePreviewDrop } from './usePreviewDrop';
+import { PRICE_USDC, useCheckoutFlow } from './useCheckoutFlow';
+import { variantCopy } from './variantCopy';
+import { WalletPayCard } from './WalletPayCard';
 
 const { toast } = require('react-hot-toast');
 
-function shortDigest(d?: string | null) {
-  if (!d) return '';
-  if (d.length <= 18) return d;
-  return `${d.slice(0, 10)}…${d.slice(-8)}`;
-}
-
-function shortAddr(a?: string | null) {
-  if (!a) return '';
-  if (a.length <= 14) return a;
-  return `${a.slice(0, 8)}…${a.slice(-6)}`;
-}
-
-function deviceReceiptStatus(receipt: unknown): string {
-  if (!receipt || typeof receipt !== 'object') return '';
-  const r = receipt as any;
-  if (r.status) return String(r.status);
-  if (r.ok === true) return 'ok';
-  if (r.task) return String(r.task);
-  return '';
-}
-
+/** `/claim` and `/test/claim` — ticket → same human → USDC on Monad → the dispenser releases one. */
 export function CheckoutPage() {
   const variant = useDemoVariant();
+  const copy = variantCopy(variant);
   const isNft = variant.release === 'nft';
   const flow = useCheckoutFlow({ release: variant.release });
+  const { stock, refresh: refreshStock } = useDropStock(isNft);
   const [resetting, setResetting] = React.useState(false);
-  const [ticketDraft, setTicketDraft] = React.useState('');
-  const autoFilled = React.useRef(false);
+  const [draft, setDraft] = React.useState('');
   const [preview] = React.useState(
     () => isNft && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('preview')
   );
+  const demo = usePreviewDrop(preview, stock?.total);
 
   React.useEffect(() => {
-    document.title = isNft ? 'Asp · Claim (NFT test)' : 'Asp · Claim';
-  }, [isNft]);
-
-  React.useEffect(() => {
-    if (autoFilled.current) return;
-    autoFilled.current = true;
     if (preview || (isNft && readPendingDrop())) return;
     const t = readDemoTicket();
     if (!t) return;
-    setTicketDraft(t);
+    setDraft(t);
     void flow.loadTicket(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once on mount
   }, []);
 
-  const onResetDemo = async () => {
+  const onReset = async () => {
     if (resetting || flow.busy) return;
     setResetting(true);
     try {
       const out = await resetDemoClaims();
       clearDemoTicket();
       flow.reset();
-      setTicketDraft('');
-      toast.success(
-        `Demo reset — Get, Claim & Backup wiped (${out?.claimsCleared ?? 0} claims, ${out?.winnersCleared ?? 0} winners)`
-      );
+      setDraft('');
+      if (isNft) void refreshStock();
+      toast.success(`Demo reset — ${out?.claimsCleared ?? 0} claims, ${out?.winnersCleared ?? 0} winners wiped`);
     } catch (e: any) {
       toast.error(e?.message || 'Reset failed');
     } finally {
@@ -83,284 +61,57 @@ export function CheckoutPage() {
     }
   };
 
-  const canRequest =
-    !flow.busy &&
-    Boolean(flow.ticketReady) &&
-    (flow.phase === 'idle' ||
-      flow.phase === 'error' ||
-      flow.phase === 'revoked' ||
-      flow.phase === 'denied');
+  const loadDraft = () => {
+    saveDemoTicket(draft);
+    void flow.loadTicket(draft);
+  };
 
-  // After a successful claim the ticket is burned — no "Start claim again" on Done.
-
-  const canVerify =
-    !flow.busy &&
-    flow.activePoh &&
-    (flow.phase === 'awaiting_human' || flow.activePoh.status === 'pending_human');
-
-  const canRetryQr =
-    !flow.busy &&
-    flow.activePoh?.status === 'authorized' &&
-    (flow.phase === 'authorized' || flow.phase === 'error');
-
-  const canRevoke =
-    !flow.busy &&
-    flow.activePoh &&
-    (flow.phase === 'awaiting_human' ||
-      flow.phase === 'authorized' ||
-      flow.phase === 'awaiting_phone_pay');
-
-  const statusLine =
-    flow.phase === 'idle' && !flow.ticket
-      ? 'Enter your ticket, then continue.'
-      : flow.statusText;
+  const phase = preview ? demo.phase : flow.phase;
+  const view = { phase, release: variant.release, hasTicket: Boolean(flow.ticket), dropStuck: Boolean(flow.pendingDrop) };
+  const yourNft = preview ? demo.nft : flow.lastHire?.nft ?? null;
+  const title = claimTitle(view);
+  const used = flow.alreadyClaimed && !flow.pendingDrop;
+  const settled = phase === 'executing' || phase === 'done';
 
   return (
-    <div style={styles.shell}>
-      <AspDemoChrome active="kiosk" />
-
-      <div style={styles.stage}>
-        <main style={styles.main}>
-          <header style={styles.hero}>
-            <p style={styles.eyebrow}>{RELEASE_LABEL}</p>
-            <h1 style={styles.title}>{DEVICE_LABEL}</h1>
-            <p style={styles.lede}>
-              {isNft
-                ? 'Enter your ticket, confirm you’re the same person with World ID, pay from your phone wallet — then the gachapon drops one limited-edition NFT (10 total) into that wallet. Same ticket can’t claim twice.'
-                : 'Enter your ticket, confirm you’re the same person with World ID, pay from your phone wallet — then one capsule comes out. Same ticket can’t claim twice.'}
-            </p>
-          </header>
+    <LiveFrame active="claim" title={isNft ? 'Asp · Claim (NFT test)' : 'Asp · Claim'} onReset={() => void onReset()} resetBusy={resetting || flow.busy}>
+      <main className="pop-stage">
+        <LiveDispenser
+          key={preview ? `preview-${demo.run}` : flow.activePoh?.petition_id || 'idle'}
+          state={claimMachineState(view)}
+          lockLabel={claimLockLabel(view)}
+          screen={claimScreen(view)}
+          stock={stock}
+          yours={yourNft ? Number(yourNft.tokenId) : null}
+        />
+        <section className="pop-panel">
+          <p className="pop-eyebrow"><b lang="ja">{copy.eyebrowJp}</b> {copy.eyebrow}</p>
+          <h1 className="pop-title">{title.lead} <em>{title.accent}</em></h1>
+          <p className="pop-lede" aria-live="polite">
+            {preview ? 'Preview — sample art, no payment, nothing minted.' : flow.statusText}
+          </p>
+          <PopSteps steps={CLAIM_STEPS} current={claimStep(view)} />
 
           {preview ? (
-            <section style={styles.panel} aria-label="Drop preview">
-              <NftDropPreview price={PRICE_USDC} />
-            </section>
+            <>
+              {demo.nft ? <ItemReveal nft={demo.nft} price={PRICE_USDC} /> : null}
+              <button type="button" className="pop-btn pop-btn-ghost" onClick={demo.replay}>Play again</button>
+            </>
           ) : (
-          <section style={styles.panel} aria-label="Checkout">
-            <label style={styles.fieldLabel} htmlFor="asp-ticket">
-              Ticket code
-            </label>
-            <div style={styles.ticketRow}>
-              <input
-                id="asp-ticket"
-                style={styles.ticketInput}
-                value={ticketDraft}
-                placeholder="WIN-······"
-                autoComplete="off"
-                spellCheck={false}
-                onChange={(e) => {
-                  const v = e.target.value.toUpperCase();
-                  setTicketDraft(v);
-                  if (v.trim()) saveDemoTicket(v);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') void flow.loadTicket(ticketDraft);
-                }}
-                disabled={flow.busy}
-              />
-              <button
-                type="button"
-                style={styles.ticketBtn}
-                disabled={flow.busy || !ticketDraft.trim()}
-                onClick={() => {
-                  saveDemoTicket(ticketDraft);
-                  void flow.loadTicket(ticketDraft);
-                }}
-              >
-                Continue
-              </button>
-            </div>
-
-            {flow.alreadyClaimed && !flow.pendingDrop ? (
-              <div style={styles.claimedHero} role="alert" aria-label="Ticket already claimed">
-                <div style={styles.claimedEyebrow}>Already claimed</div>
-                <h2 style={styles.claimedTitle}>This ticket already claimed</h2>
-                <p style={styles.claimedLede}>
-                  {flow.ticket ? (
-                    <>
-                      <strong>{flow.ticket}</strong> already got its capsule. One person, one
-                      ticket, one capsule — no second try.
-                    </>
-                  ) : (
-                    <>
-                      This ticket already got its capsule. One person, one ticket, one capsule —
-                      no second try.
-                    </>
-                  )}
-                </p>
-                <div style={styles.claimedBadge}>No second claim</div>
-                <p style={styles.claimedHint}>
-                  Put a different unused ticket above and tap Continue.
-                </p>
-              </div>
-            ) : (
-              <>
-            {flow.ticket ? (
-              <p style={styles.ticketStatus}>
-                <strong>{flow.ticket}</strong>
-                {flow.ticketReady ? ' · loaded' : ' · tap Continue to look it up'}
-              </p>
-            ) : (
-              <p style={styles.ticketStatus}>
-                No ticket yet — get one first if you need a code.
-              </p>
-            )}
-
-            <div style={styles.railWrap}>
-              <PhaseRail phase={flow.phase} />
-            </div>
-
-            <div style={styles.statusBlock}>
-              <p style={styles.statusText}>{statusLine}</p>
-              {flow.errorDetail ? <pre style={styles.errorBox}>{flow.errorDetail}</pre> : null}
-            </div>
-
-            <div style={styles.actions}>
-              {canRequest ? (
-                <button
-                  type="button"
-                  style={styles.primary}
-                  disabled={flow.busy}
-                  onClick={() => {
-                    void flow.requestCapsule();
-                  }}
-                >
-                  {flow.phase === 'idle' ? 'Start claim' : 'Start claim again'}
-                </button>
+            <>
+              {!settled ? (
+                <ClaimTicketCard draft={draft} onDraft={(v) => { setDraft(v); if (v.trim()) saveDemoTicket(v); }}
+                  onContinue={loadDraft} busy={flow.busy} loadedTicket={flow.ticket} ticketReady={flow.ticketReady}
+                  used={used} noun={copy.noun} />
               ) : null}
-
-              {canVerify ? (
-                <button
-                  type="button"
-                  style={styles.primary}
-                  disabled={flow.busy}
-                  onClick={() => flow.openWorldVerify()}
-                >
-                  Confirm with World ID
-                </button>
-              ) : null}
-
-              {canRetryQr ? (
-                <button
-                  type="button"
-                  style={styles.secondary}
-                  disabled={flow.busy}
-                  onClick={() => flow.retryQr()}
-                >
-                  Pay again
-                </button>
-              ) : null}
-
-              {flow.busy && flow.phase !== 'awaiting_phone_pay' ? (
-                <button type="button" style={styles.primary} disabled>
-                  Working…
-                </button>
-              ) : null}
-
-              {canRevoke ? (
-                <button type="button" style={styles.ghost} onClick={() => void flow.revoke()}>
-                  Cancel claim
-                </button>
-              ) : null}
-            </div>
-
-            {flow.phase === 'awaiting_phone_pay' && flow.kioskPay ? (
-              <WalletPayPanel
-                payment={flow.kioskPay}
-                onTx={flow.submitTx}
-                hint="You're already verified here — the payment happens on your phone."
-              />
-            ) : null}
-
-            {isNft ? (
-              <NftDropSection
-                phase={flow.phase}
-                nft={flow.lastHire?.nft ?? null}
-                hasPendingDrop={Boolean(flow.pendingDrop)}
-                busy={flow.busy}
-                onRetry={flow.retryDrop}
-                paymentTx={flow.lastHire?.txHash}
-                paymentUrl={
-                  flow.lastHire?.txHash
-                    ? flow.lastHire.explorerUrl || explorerTxUrl(flow.lastHire.txHash)
-                    : null
-                }
-                price={PRICE_USDC}
-              />
-            ) : null}
-
-            {!isNft && flow.phase === 'done' && flow.lastHire ? (
-              <div style={styles.receipt} aria-label="Monad payment receipt">
-                <div style={styles.receiptTitle}>Capsule released</div>
-                <dl style={styles.receiptMeta}>
-                  <div style={styles.metaItem}>
-                    <dt style={styles.metaDt}>Monad tx</dt>
-                    <dd style={styles.metaDd}>
-                      {flow.lastHire.txHash ? (
-                        <a
-                          href={flow.lastHire.explorerUrl || explorerTxUrl(flow.lastHire.txHash)}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={styles.link}
-                        >
-                          {shortDigest(flow.lastHire.txHash)}
-                        </a>
-                      ) : (
-                        '—'
-                      )}
-                    </dd>
-                  </div>
-                  <div style={styles.metaItem}>
-                    <dt style={styles.metaDt}>Payer</dt>
-                    <dd style={styles.metaDd}>{shortAddr(flow.lastHire.payer) || '—'}</dd>
-                  </div>
-                  <div style={styles.metaItem}>
-                    <dt style={styles.metaDt}>Device</dt>
-                    <dd style={styles.metaDd}>
-                      {deviceReceiptStatus(flow.lastHire.deviceReceipt) || 'ok'}
-                    </dd>
-                  </div>
-                  <div style={styles.metaItem}>
-                    <dt style={styles.metaDt}>Price</dt>
-                    <dd style={styles.metaDd}>{PRICE_USDC} USDC</dd>
-                  </div>
-                </dl>
-              </div>
-            ) : null}
-
-            <details style={styles.details}>
-              <summary style={styles.summary}>Technical details</summary>
-              <dl style={styles.meta}>
-                <div style={styles.metaItem}>
-                  <dt style={styles.metaDt}>Device</dt>
-                  <dd style={styles.metaDd}>{GACHA_DEVICE_ID}</dd>
-                </div>
-                <div style={styles.metaItem}>
-                  <dt style={styles.metaDt}>Release</dt>
-                  <dd style={styles.metaDd}>{isNft ? 'NFT drop (no motor)' : 'DISPENSE_ONCE'}</dd>
-                </div>
-                <div style={styles.metaItem}>
-                  <dt style={styles.metaDt}>Petition</dt>
-                  <dd style={styles.metaDd}>{flow.activePoh?.petition_id || '—'}</dd>
-                </div>
-                <div style={styles.metaItem}>
-                  <dt style={styles.metaDt}>Price</dt>
-                  <dd style={styles.metaDd}>{PRICE_USDC} USDC</dd>
-                </div>
-              </dl>
-            </details>
-              </>
-            )}
-          </section>
+              {!used ? <ClaimActions flow={flow} /> : null}
+              {phase === 'awaiting_phone_pay' && flow.kioskPay ? <WalletPayCard payment={flow.kioskPay} onTx={flow.submitTx} /> : null}
+              <ClaimOutcome flow={flow} />
+              <ClaimDetails isNft={isNft} petitionId={flow.activePoh?.petition_id} />
+            </>
           )}
-        </main>
-
-        <AspDemoFooter
-          onReset={() => void onResetDemo()}
-          resetBusy={resetting || flow.busy}
-          resetLabel="Reset demo"
-        />
-      </div>
+        </section>
+      </main>
 
       <WorldVerifyModal
         open={flow.worldOpen}
@@ -368,16 +119,13 @@ export function CheckoutPage() {
         action={flow.enrollAction}
         signal={flow.activePoh?.petition_id || undefined}
         title="Confirm it's you"
-        subtitle="Same World ID as when you got the ticket. That unlocks payment for one capsule."
+        subtitle={`Same World ID as when you got the ticket. That unlocks payment for one ${copy.noun}.`}
         successTitle="Confirmed"
         successSubtitle="Close this to pay."
         onVerified={async (result) => {
           try {
             const out = await flow.onWorldProof(result);
-            if (out?.claimAlreadyUsed) {
-              toast.error('Already claimed — you cannot claim again');
-              return;
-            }
+            if (out?.claimAlreadyUsed) return void toast.error('Already claimed — you cannot claim again');
             toast.success('Identity confirmed — ready to pay');
           } catch (e: any) {
             toast.error(e?.message || 'Confirm failed');
@@ -386,252 +134,6 @@ export function CheckoutPage() {
         }}
         onError={(msg) => toast.error(msg)}
       />
-    </div>
+    </LiveFrame>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  shell: {
-    minHeight: '100%',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    fontFamily: aspBrand.font,
-    color: aspBrand.ink,
-    background: aspBrand.paper,
-  },
-  stage: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column' as const,
-  },
-  main: {
-    width: '100%',
-    maxWidth: 520,
-    margin: '0 auto',
-    padding: '28px 22px 14px',
-    boxSizing: 'border-box' as const,
-    flex: 1,
-  },
-  hero: { marginBottom: 20 },
-  claimedHero: {
-    padding: '8px 0 4px',
-  },
-  claimedEyebrow: {
-    margin: 0,
-    fontSize: aspBrand.type.eyebrow,
-    fontWeight: 650,
-    letterSpacing: 0.08,
-    textTransform: 'uppercase' as const,
-    color: '#B42318',
-  },
-  claimedTitle: {
-    margin: '10px 0 10px',
-    fontSize: 26,
-    fontWeight: 700,
-    letterSpacing: -0.6,
-    lineHeight: 1.15,
-  },
-  claimedLede: {
-    margin: '0 0 16px',
-    fontSize: aspBrand.type.lede,
-    lineHeight: 1.5,
-    color: aspBrand.muted,
-  },
-  claimedBadge: {
-    display: 'inline-block',
-    marginBottom: 18,
-    padding: '6px 12px',
-    borderRadius: 980,
-    border: `1px solid ${aspBrand.lineStrong}`,
-    fontSize: 12,
-    fontWeight: 650,
-    letterSpacing: 0.04,
-    textTransform: 'uppercase' as const,
-  },
-  claimedHint: {
-    margin: '0 0 4px',
-    fontSize: aspBrand.type.hint,
-    lineHeight: 1.45,
-    color: aspBrand.muted,
-  },
-  eyebrow: {
-    margin: 0,
-    fontSize: aspBrand.type.eyebrow,
-    fontWeight: 650,
-    letterSpacing: 0.08,
-    textTransform: 'uppercase' as const,
-    color: aspBrand.muted,
-  },
-  title: {
-    margin: '10px 0 10px',
-    fontSize: aspBrand.type.title,
-    fontWeight: 700,
-    letterSpacing: -0.8,
-    lineHeight: 1.06,
-  },
-  lede: {
-    margin: 0,
-    fontSize: aspBrand.type.lede,
-    lineHeight: 1.5,
-    color: aspBrand.muted,
-  },
-  panel: {
-    background: aspBrand.paperCard,
-    border: `1px solid ${aspBrand.line}`,
-    borderRadius: 16,
-    padding: 20,
-  },
-  fieldLabel: {
-    display: 'block',
-    fontSize: aspBrand.type.label,
-    fontWeight: 650,
-    color: aspBrand.muted,
-    marginBottom: 8,
-  },
-  ticketRow: { display: 'flex', gap: 8 },
-  ticketInput: {
-    flex: 1,
-    minWidth: 0,
-    border: `1px solid ${aspBrand.lineStrong}`,
-    borderRadius: 12,
-    padding: '14px 14px',
-    fontSize: aspBrand.type.body,
-    fontFamily: aspBrand.mono,
-    letterSpacing: 1.5,
-    background: aspBrand.paper,
-    color: aspBrand.ink,
-  },
-  ticketBtn: {
-    border: 'none',
-    background: aspBrand.ink,
-    color: '#fff',
-    borderRadius: 12,
-    padding: '0 18px',
-    fontSize: aspBrand.type.button,
-    fontWeight: 650,
-    cursor: 'pointer',
-    fontFamily: aspBrand.font,
-  },
-  ticketStatus: {
-    margin: '10px 0 0',
-    fontSize: aspBrand.type.hint,
-    color: aspBrand.muted,
-    lineHeight: 1.4,
-  },
-  railWrap: { marginTop: 18 },
-  statusBlock: {
-    marginTop: 18,
-    paddingTop: 16,
-    borderTop: `1px solid ${aspBrand.line}`,
-  },
-  statusText: {
-    margin: 0,
-    fontSize: aspBrand.type.status,
-    lineHeight: 1.45,
-    color: aspBrand.ink,
-    fontWeight: 500,
-  },
-  errorBox: {
-    margin: '10px 0 0',
-    padding: 12,
-    borderRadius: 12,
-    background: 'rgba(192,57,43,0.08)',
-    border: '1px solid rgba(192,57,43,0.22)',
-    color: aspBrand.danger,
-    fontSize: aspBrand.type.meta,
-    fontFamily: aspBrand.mono,
-    whiteSpace: 'pre-wrap' as const,
-  },
-  actions: {
-    display: 'flex',
-    flexWrap: 'wrap' as const,
-    gap: 8,
-    marginTop: 16,
-  },
-  primary: {
-    border: 'none',
-    background: aspBrand.ink,
-    color: '#fff',
-    borderRadius: 12,
-    padding: '13px 18px',
-    fontSize: aspBrand.type.button,
-    fontWeight: 650,
-    cursor: 'pointer',
-    fontFamily: aspBrand.font,
-  },
-  secondary: {
-    border: `1px solid ${aspBrand.ink}`,
-    background: 'transparent',
-    color: aspBrand.ink,
-    borderRadius: 12,
-    padding: '13px 16px',
-    fontSize: aspBrand.type.button,
-    fontWeight: 650,
-    cursor: 'pointer',
-    fontFamily: aspBrand.font,
-  },
-  ghost: {
-    border: `1px solid ${aspBrand.lineStrong}`,
-    background: 'transparent',
-    color: aspBrand.muted,
-    borderRadius: 12,
-    padding: '13px 14px',
-    fontSize: aspBrand.type.button,
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: aspBrand.font,
-  },
-  link: {
-    color: aspBrand.ink,
-    textDecoration: 'underline',
-    fontWeight: 650,
-    fontSize: aspBrand.type.hint,
-  },
-  receipt: {
-    marginTop: 18,
-    padding: 14,
-    borderRadius: 14,
-    border: `1px solid ${aspBrand.line}`,
-    background: aspBrand.paper,
-  },
-  receiptTitle: { fontSize: aspBrand.type.body, fontWeight: 700, marginBottom: 10 },
-  receiptMeta: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 10,
-    margin: 0,
-  },
-  details: {
-    marginTop: 16,
-    borderTop: `1px solid ${aspBrand.line}`,
-    paddingTop: 10,
-  },
-  summary: {
-    cursor: 'pointer',
-    fontSize: aspBrand.type.meta,
-    fontWeight: 650,
-    color: aspBrand.muted,
-    listStyle: 'none' as const,
-  },
-  meta: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 10,
-    margin: '12px 0 0',
-  },
-  metaItem: { margin: 0, minWidth: 0 },
-  metaDt: {
-    fontSize: 11,
-    fontWeight: 600,
-    color: aspBrand.muted,
-    textTransform: 'uppercase' as const,
-    marginBottom: 2,
-  },
-  metaDd: {
-    margin: 0,
-    fontSize: aspBrand.type.meta,
-    fontFamily: aspBrand.mono,
-    color: aspBrand.ink,
-    wordBreak: 'break-all' as const,
-  },
-};

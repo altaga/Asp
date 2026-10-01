@@ -5,7 +5,7 @@ import { WalletPayPanel } from './WalletPayPanel';
 import { explorerTxUrl } from '../wallet/appKit';
 import { AspDemoChrome, AspDemoFooter, aspBrand } from './AspDemoChrome';
 import {
-  DEVICE_LABEL,
+  MACHINE_TITLE,
   PRICE_USDC,
   RELEASE_LABEL,
   useDemoV1Flow,
@@ -28,7 +28,7 @@ function shortAddr(a?: string | null) {
 const STEPS = [
   { id: 'world', label: 'World ID' },
   { id: 'pay', label: 'Pay' },
-  { id: 'motor', label: 'Capsule' },
+  { id: 'motor', label: 'Item' },
   { id: 'tx', label: 'Receipt' },
 ] as const;
 
@@ -100,10 +100,10 @@ export function DemoV1Page() {
         <main style={styles.main}>
           <section style={styles.hero}>
             <p style={styles.eyebrow}>{RELEASE_LABEL} · direct claim</p>
-            <h1 style={styles.title}>{DEVICE_LABEL}</h1>
+            <h1 style={styles.title}>{MACHINE_TITLE}</h1>
             <p style={styles.lede}>
               No ticket needed. Confirm with World ID, pay from your phone wallet, then one
-              capsule comes out — still one person, one capsule.
+              limited edition item comes out — still one human, one item.
             </p>
           </section>
 
@@ -114,8 +114,8 @@ export function DemoV1Page() {
                 <div style={styles.deniedEyebrow}>Already claimed</div>
                 <h2 style={styles.deniedTitle}>This human already claimed</h2>
                 <p style={styles.deniedLede}>
-                  Asp already released a capsule for this World ID on this release. One human ·
-                  one unit — the machine stays locked.
+                  Asp already released an item for this World ID on this release. One human ·
+                  one item — the machine stays locked.
                 </p>
                 <div style={styles.deniedBadge}>No second claim</div>
                 {flow.errorDetail ? <p style={styles.deniedDetail}>{flow.errorDetail}</p> : null}
@@ -250,16 +250,16 @@ export function DemoV1Page() {
                 {flow.phase === 'executing' ? (
                   <div style={styles.motorBox} role="status">
                     <div style={styles.motorPulse} />
-                    <p style={styles.motorText}>Payment received — releasing capsule…</p>
+                    <p style={styles.motorText}>Payment received — releasing your item…</p>
                   </div>
                 ) : null}
 
                 {flow.phase === 'done' && flow.lastHire ? (
                   <div style={styles.success} aria-label="Transaction result">
                     <div style={styles.successCheck}>✓</div>
-                    <div style={styles.successTitle}>Capsule released</div>
+                    <div style={styles.successTitle}>Item released</div>
                     <p style={styles.successLede}>
-                      Payment settled on Monad and the gachapon was told to dispense one capsule.
+                      Payment settled on Monad — you received a limited edition item.
                     </p>
                     <dl style={styles.receiptMeta}>
                       <div style={styles.metaItem}>
@@ -304,8 +304,8 @@ export function DemoV1Page() {
                 {flow.phase === 'done' && !flow.lastHire ? (
                   <div style={styles.success}>
                     <div style={styles.successCheck}>✓</div>
-                    <div style={styles.successTitle}>Capsule released</div>
-                    <p style={styles.successLede}>Look in the tray — your capsule should be out.</p>
+                    <div style={styles.successTitle}>Item released</div>
+                    <p style={styles.successLede}>Look in the tray — your limited edition item should be out.</p>
                   </div>
                 ) : null}
               </>

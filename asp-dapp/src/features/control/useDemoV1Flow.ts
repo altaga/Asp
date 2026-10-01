@@ -15,8 +15,9 @@ import {
 } from '../kiosk/kioskPay';
 import type { ChatPhase, PohCardPayload } from '../../theme/tokens';
 
-export const RELEASE_LABEL = 'Metropolis capsule';
+export const RELEASE_LABEL = 'Metropolis limited drop';
 export const DEVICE_LABEL = 'Event Gachapon';
+export const MACHINE_TITLE = 'Limited item dispenser';
 export const PRICE_USDC = '0.002'; // 2000 atomic USDC (6 decimals)
 
 /**
@@ -27,7 +28,7 @@ export function useDemoV1Flow() {
   const [phase, setPhase] = useState<ChatPhase>('idle');
   const [busy, setBusy] = useState(false);
   const [statusText, setStatusText] = useState(
-    'Tap Start claim. Confirm with World ID, pay with your phone wallet, then get one capsule.'
+    'Tap Start claim. Confirm with World ID, pay with your phone wallet, then get one limited edition item.'
   );
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [activePoh, setActivePoh] = useState<PohCardPayload | null>(null);
@@ -89,7 +90,7 @@ export function useDemoV1Flow() {
     setLastHire(null);
     setKioskPay(null);
     setPhase('requested');
-    setStatusText('Preparing claim… capsule stays locked until you finish.');
+    setStatusText('Preparing claim… the item stays locked until you finish.');
 
     try {
       const data = await createPetition({
@@ -176,7 +177,7 @@ export function useDemoV1Flow() {
           setPhase('denied');
           setErrorDetail(String(e.message || e));
           setStatusText(
-            'Already claimed — this World ID already got a capsule. You cannot claim again.'
+            'Already claimed — this World ID already got its item. You cannot claim again.'
           );
           setActivePoh((prev) => (prev ? { ...prev, status: 'denied' as any } : prev));
           setWorldOpen(false);
@@ -264,7 +265,7 @@ export function useDemoV1Flow() {
         stopPolling = true;
         setBusy(true);
         setPhase('executing');
-        setStatusText('Payment received — releasing capsule…');
+        setStatusText('Payment received — releasing your item…');
 
         try {
           const out = await dispenseAfterPayment(kioskPay.nonce);
@@ -276,7 +277,7 @@ export function useDemoV1Flow() {
             gateway: out.gateway || kioskPay.receiver,
             payer: out.payer || null,
             raw: out,
-            statusText: 'Done. Payment settled and one capsule was released.',
+            statusText: 'Done. Payment settled and you received a limited edition item.',
           });
         } catch (e: any) {
           if (abandonComplete.current) return;
@@ -304,7 +305,7 @@ export function useDemoV1Flow() {
             setErrorDetail(msg);
             setStatusText(
               statusCode === 404
-                ? 'Payment OK on-chain. Gateway needs /asp/kiosk/dispense to release the capsule.'
+                ? 'Payment OK on-chain. Gateway needs /asp/kiosk/dispense to release the item.'
                 : msg
             );
             setBusy(false);
@@ -315,7 +316,7 @@ export function useDemoV1Flow() {
           setPhase('error');
           setErrorDetail(msg);
           setStatusText(
-            'Payment settled — claim used. You cannot claim again. Capsule release failed.'
+            'Payment settled — claim used. You cannot claim again. Item release failed.'
           );
           setBusy(false);
           completeInFlight.current = false;
@@ -366,7 +367,7 @@ export function useDemoV1Flow() {
     setErrorDetail(null);
     setBusy(false);
     setStatusText(
-      'Tap Start claim. Confirm with World ID, pay with your phone wallet, then get one capsule.'
+      'Tap Start claim. Confirm with World ID, pay with your phone wallet, then get one limited edition item.'
     );
   }, []);
 
@@ -382,7 +383,7 @@ export function useDemoV1Flow() {
       setPhase('done');
       setBusy(false);
       setStatusText(
-        'Done. Capsule command was sent — check the tray (screen waited too long for a receipt).'
+        'Done. Release command was sent — check the tray (screen waited too long for a receipt).'
       );
       setKioskPay(null);
       setActivePoh((prev) => (prev ? { ...prev, status: 'used' } : prev));

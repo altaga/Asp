@@ -7,7 +7,7 @@ const STEPS: { id: string; label: string; match: ChatPhase[] }[] = [
   { id: 'poh', label: 'World ID', match: ['awaiting_human'] },
   { id: 'auth', label: 'Ready', match: ['authorized'] },
   { id: 'pay', label: 'Pay', match: ['awaiting_phone_pay', 'paying', 'executing'] },
-  { id: 'done', label: 'Capsule', match: ['done'] },
+  { id: 'done', label: 'Item', match: ['done'] },
 ];
 
 const TERMINAL: ChatPhase[] = ['denied', 'revoked', 'error'];
@@ -36,7 +36,7 @@ export function PhaseRail({ phase }: Props) {
         <span style={{ ...styles.terminalLabel, color }}>{label}</span>
         <span style={styles.terminalHint}>
           {phase === 'denied'
-            ? 'This ticket already got a capsule'
+            ? 'This ticket already got its item'
             : phase === 'revoked'
               ? 'Claim cancelled — nothing dispensed'
               : 'Something failed — try again'}

@@ -21,11 +21,12 @@ import type { NftDrop } from '../nft/nftTypes';
 import { clearPendingDrop, readPendingDrop, savePendingDrop, type PendingDrop } from '../nft/pendingDrop';
 import type { ChatPhase, PohCardPayload } from '../../theme/tokens';
 
-export const RELEASE_LABEL = 'Metropolis capsule';
+export const RELEASE_LABEL = 'Metropolis limited drop';
 export const DEVICE_LABEL = 'Event Gachapon';
 export const PRICE_USDC = '0.002'; // 2000 atomic USDC (6 decimals)
 
 export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind } = {}) {
+  const item = release === 'nft' ? 'limited edition' : 'limited edition item';
   const [phase, setPhase] = useState<ChatPhase>('idle');
   const [busy, setBusy] = useState(false);
   const [statusText, setStatusText] = useState(
@@ -86,7 +87,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
     setBusy(true);
     setPhase('executing');
     setErrorDetail(null);
-    setStatusText('Payment received — the capsule is dropping…');
+    setStatusText('Payment received — your limited edition is dropping…');
     try {
       const nft = await dropNft(drop.nonce);
       if (abandonComplete.current) return;
@@ -113,7 +114,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
       setErrorDetail(String(e?.message || e));
       setStatusText(
         e?.code === 'sold-out'
-          ? 'Payment settled, but every limited capsule is already gone.'
+          ? 'Payment settled, but every limited edition is already gone.'
           : 'Payment settled — the NFT drop did not finish. Retry the drop; you will not pay again.'
       );
     } finally {
@@ -182,7 +183,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
         setAlreadyClaimed(true);
         setPhase('denied');
         setErrorDetail(null);
-        setStatusText('This ticket already claimed its capsule. Asp will not release another.');
+        setStatusText(`This ticket already claimed its ${item}. Asp will not release another.`);
         return;
       }
 
@@ -213,7 +214,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
         if (petition?.status === 'pending_human' || next?.step === 'proof_of_human') {
           setPhase('awaiting_human');
           setStatusText(
-            'Confirm you’re the same person who got this ticket — then pay to release the capsule.'
+            `Confirm you’re the same person who got this ticket — then pay to release your ${item}.`
           );
         } else {
           setPhase('authorized');
@@ -233,7 +234,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
       setErrorDetail(String(e?.message || e));
       setStatusText('Unknown ticket — enroll with Get first to receive a code.');
     }
-  }, [startQrPay]);
+  }, [item, startQrPay]);
 
   const requestCapsule = useCallback(async () => {
     if (busy) return;
@@ -289,7 +290,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
           setPhase('denied');
           setAlreadyClaimed(true);
           setErrorDetail(null);
-          setStatusText('This ticket already claimed its capsule. Asp will not release another.');
+          setStatusText(`This ticket already claimed its ${item}. Asp will not release another.`);
           setTicketReady(false);
           setWorldOpen(false);
           return { ok: false as const, claimAlreadyUsed: true as const };
@@ -297,7 +298,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
         throw e;
       }
     },
-    [activePoh, startQrPay, ticket]
+    [activePoh, item, startQrPay, ticket]
   );
 
   useEffect(() => {
@@ -392,7 +393,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
         completeInFlight.current = true;
         setBusy(true);
         setPhase('executing');
-        setStatusText('Payment received — releasing capsule…');
+        setStatusText('Payment received — the machine is releasing your item…');
 
         try {
           const out = await dispenseAfterPayment(kioskPay.nonce);
@@ -404,7 +405,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
             gateway: out.gateway || kioskPay.receiver,
             payer: out.payer || null,
             raw: out,
-            statusText: 'Done. Payment settled and one capsule was released.',
+            statusText: 'Done. Payment settled — you received a limited edition item.',
           });
         } catch (e: any) {
           if (abandonComplete.current) return;
@@ -434,7 +435,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
             setErrorDetail(msg);
             setStatusText(
               statusCode === 404
-                ? 'Payment OK on-chain. Gateway needs /asp/kiosk/dispense to release the capsule.'
+                ? 'Payment OK on-chain. Gateway needs /asp/kiosk/dispense to release the item.'
                 : msg
             );
             setBusy(false);
@@ -448,7 +449,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
           setTicketReady(false);
           setAlreadyClaimed(true);
           setStatusText(
-            'Payment settled — this ticket is used and cannot be claimed again. Capsule release failed.'
+            'Payment settled — this ticket is used and cannot be claimed again. The item release failed.'
           );
           setBusy(false);
           completeInFlight.current = false;

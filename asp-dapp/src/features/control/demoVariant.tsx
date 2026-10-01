@@ -2,8 +2,8 @@ import React, { createContext, useContext } from 'react';
 import type { ReleaseKind } from '../kiosk/kioskPay';
 
 /**
- * Same Get → Claim screens, two endings: the live gachapon motor, or the `/test` NFT drop
- * (gachapon animation + one limited edition minted to the payer on Monad).
+ * Same Get → Claim screens, two endings: the live dispenser motor, or the `/test` NFT drop
+ * (dispenser animation + one limited edition minted to the payer on Monad).
  */
 export type DemoVariant = {
   basePath: '' | '/test';
