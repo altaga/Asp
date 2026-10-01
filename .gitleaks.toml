@@ -1,0 +1,36 @@
+title = "Asp secret scan"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "sui-private-key"
+description = "Sui bech32 private key"
+regex = '''suiprivkey1[0-9a-z]{50,}'''
+
+[[rules]]
+id = "evm-private-key-literal"
+description = "Hardcoded EVM private key passed to a viem/ethers signer"
+regex = '''(?i)(privateKeyToAccount|new\s+Wallet|fromPrivateKey)\(\s*["'`]?(0x)?[0-9a-f]{64}'''
+
+[[rules]]
+id = "assigned-private-key"
+description = "Private key / secret assigned to a variable"
+regex = '''(?i)(private_?key|secret|mnemonic|passphrase|password|signing_?key|bearer_?token|verification_?token|jwt)["']?\s*[:=]\s*["']?(0x)?[A-Za-z0-9+/_\-]{24,}'''
+[rules.allowlist]
+regexTarget = "match"
+regexes = ['''(?i)(replace|example|placeholder|your_|xxxx|process\.env|import\.meta)''']
+
+[[rules]]
+id = "jwt"
+description = "JSON Web Token"
+regex = '''eyJ[A-Za-z0-9_\-]{10,}\.eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}'''
+
+[allowlist]
+# *.env.example placeholders like 0xREPLACE_WITH_BUYER_KEY — the whole secret must be the placeholder.
+regexes = ['''(?i)^(0x)?REPLACE_(WITH_[A-Z0-9_]+|ME)$''']
+paths = [
+  '''(^|/)package-lock\.json$''',
+  '''\.png$''',
+  '''\.wasm$''',
+]

@@ -1,4 +1,4 @@
-# Logs
+﻿# Logs
 logs
 *.log
 npm-debug.log*
@@ -45,6 +45,11 @@ jspm_packages/
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
+# Asp â€” generated test artifacts (funded keypairs, etc.)
+standalone/tmp/
+standalone/agent-wallet.json
+standalone/agent-2-wallet.json
+
 # TypeScript cache
 *.tsbuildinfo
 
@@ -72,12 +77,23 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variable files
+# dotenv environment variable files (only *.env.example with placeholders is committed)
 .env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+.env.*
+!.env.example
+!**/.env.example
+
+# Keys, wallets, and process manifests with real env values
+*.pem
+*.key
+*.ppk
+wallet*.json
+*-wallet.json
+process.json
+process.*.json
+tx_audit.json
+last_tx_bytes.txt
+gacha-device-creds.json
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -134,3 +150,35 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+wallet.json
+@altaga-x402-sui/scripts/publish.js
+package-lock.json
+.npmignore
+creds.h
+
+*simulator
+@altaga-x402-sui/
+
+# AI and Debug Artifacts
+.claude/
+.cursor/
+.dbg/
+CLAUDE.md
+debug-*.md
+
+# Local-only archive (never commit). Do not put images/ here.
+old/
+
+# Local source-of-truth docs (research, World notes, user rules â€” never commit).
+Docs/
+
+# Local agent skills (never commit).
+Skills/
+
+# Local mirror of the Sui Services VM â€” edit here, sync to the box manually (never commit).
+VM/
+# Local Playwright helper (never commit)
+asp-dapp/pw-tools/
+asp-dapp/.playwright-tools/
+
