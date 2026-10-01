@@ -4,7 +4,7 @@ import { PopSteps, type PopStep } from '../dispenser/PopSteps';
 import type { GetPhase } from './useGetTicket';
 
 const STEPS: PopStep[] = [
-  { jp: '人間証明', en: 'Prove human' },
+  { jp: '人間証明', en: 'Proof of Humanity' },
   { jp: '整理券', en: 'Get ticket' },
   { jp: '受け取り', en: 'Pick up' },
 ];

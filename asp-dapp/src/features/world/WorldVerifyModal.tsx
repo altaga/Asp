@@ -139,7 +139,7 @@ export function WorldVerifyModal({
               {phase === 'success'
                 ? 'Verified. You can close this panel.'
                 : subtitle ||
-                  'The device is waiting for Proof of Human before it will run.'}
+                  'The device is waiting for Proof of Humanity before it will run.'}
             </div>
           </div>
           <button type="button" style={styles.close} onClick={() => onOpenChangeRef.current(false)}>

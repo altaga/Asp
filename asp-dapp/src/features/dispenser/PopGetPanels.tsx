@@ -6,7 +6,7 @@ import { SAMPLE_TICKET } from './popSample';
 export type GetState = 'ready' | 'verifying' | 'ticket' | 'used';
 
 const STEPS: PopStep[] = [
-  { jp: '人間証明', en: 'Prove human' },
+  { jp: '人間証明', en: 'Proof of Humanity' },
   { jp: '整理券', en: 'Get ticket' },
   { jp: '受け取り', en: 'Pick up' },
 ];
