@@ -1,0 +1,435 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { WorldVerifyModal } from '../world/WorldVerifyModal';
+import { ENROLL_ACTION, enrollWinner, resetDemoClaims } from '../hire/gateway';
+import { clearDemoTicket, saveDemoTicket } from './aspDemoTicket';
+import { AspDemoChrome, AspDemoFooter, aspBrand } from './AspDemoChrome';
+import { useDemoVariant, variantHref } from './demoVariant';
+
+const { toast } = require('react-hot-toast');
+
+type Phase = 'ready' | 'working' | 'done' | 'error';
+
+/**
+ * Off-kiosk winner invite — World Selfie Check (legacy) → ticket.
+ * Nullifier is the stable identity; ticket is what the human brings to the kiosk.
+ */
+export function SignupPage() {
+  const [phase, setPhase] = useState<Phase>('ready');
+  const [worldOpen, setWorldOpen] = useState(false);
+  const [ticket, setTicket] = useState<string | null>(null);
+  const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
+  const [alreadyClaimed, setAlreadyClaimed] = useState(false);
+  const [detail, setDetail] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const variant = useDemoVariant();
+
+  useEffect(() => {
+    document.title = variant.release === 'nft' ? 'Asp · Get (NFT test)' : 'Asp · Get';
+  }, [variant.release]);
+
+  const onReset = async () => {
+    setBusy(true);
+    try {
+      await resetDemoClaims();
+      clearDemoTicket();
+      setTicket(null);
+      setAlreadyEnrolled(false);
+      setAlreadyClaimed(false);
+      setPhase('ready');
+      setDetail(null);
+      toast.success('Demo reset — Get, Claim & Backup wiped');
+    } catch (e: any) {
+      toast.error(e?.message || 'Reset failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const startWorld = () => {
+    setDetail(null);
+    setPhase('working');
+    setWorldOpen(true);
+  };
+
+  const onVerified = useCallback(async (idkitResponse: unknown) => {
+    setBusy(true);
+    try {
+      const out = await enrollWinner(idkitResponse, {
+        action: ENROLL_ACTION,
+        signal: 'asp-enroll',
+      });
+      const t = out.winner?.ticket;
+      if (!t) throw new Error('No ticket returned');
+      const claimed = Boolean(out.winner?.claimed_at);
+      saveDemoTicket(t);
+      setTicket(t);
+      setAlreadyEnrolled(Boolean(out.already));
+      setAlreadyClaimed(claimed);
+      setPhase('done');
+      if (claimed) {
+        toast.error('Already claimed — no second ticket');
+      } else if (out.already) {
+        toast.success(`Welcome back — same ticket ${t}`);
+      } else {
+        toast.success(`Registered — ${t}`);
+      }
+    } catch (e: any) {
+      setPhase('error');
+      const detailMsg = [e?.message, e?.code].filter(Boolean).join(' · ');
+      setDetail(detailMsg || 'Get failed');
+      toast.error(detailMsg || 'Get failed');
+      throw e;
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const copyTicket = async () => {
+    if (!ticket) return;
+    try {
+      await navigator.clipboard.writeText(ticket);
+      toast.success('Ticket copied');
+    } catch {
+      toast.error('Could not copy');
+    }
+  };
+
+  /** Next person in line — local UI only; does not wipe other winners. */
+  const nextPerson = () => {
+    clearDemoTicket();
+    setTicket(null);
+    setAlreadyEnrolled(false);
+    setAlreadyClaimed(false);
+    setDetail(null);
+    setWorldOpen(false);
+    setPhase('ready');
+  };
+
+  return (
+    <div style={styles.shell}>
+      <AspDemoChrome active="signup" />
+
+      <div style={styles.stage}>
+        <main style={styles.main}>
+          {phase === 'done' && ticket ? (
+            <>
+              {alreadyClaimed ? (
+                <div style={styles.claimedBanner} role="alert">
+                  <div style={styles.claimedEyebrow}>Already claimed</div>
+                  <h1 style={styles.title}>You already got your capsule</h1>
+                  <p style={styles.lede}>
+                    This World ID already has a ticket for this drop, and that ticket already
+                    claimed. One person gets one capsule — no second ticket.
+                  </p>
+                  <section style={styles.pass} aria-label="Your ticket">
+                    <div style={styles.passTop}>
+                      <span style={styles.passEvent}>Tokyo 2026</span>
+                      <span style={styles.passKind}>Used</span>
+                    </div>
+                    <div style={styles.passCode}>{ticket}</div>
+                    <div style={styles.passRule} aria-hidden />
+                    <p style={styles.passHint}>Your code from before — not a new one</p>
+                  </section>
+                </div>
+              ) : (
+                <>
+                  <p style={styles.eyebrow}>
+                    {alreadyEnrolled ? 'Welcome back' : "You're in"}
+                  </p>
+                  <h1 style={styles.title}>
+                    {alreadyEnrolled ? 'Your ticket' : 'Save this ticket'}
+                  </h1>
+                  <p style={styles.lede}>
+                    {alreadyEnrolled
+                      ? "Same person, same code. Keep this one — you don't get another."
+                      : "Copy it or take a photo. You'll need it to claim. Only you can use it, because it's tied to your World ID."}
+                  </p>
+
+                  <section style={styles.pass} aria-label="Winner ticket">
+                    <div style={styles.passTop}>
+                      <span style={styles.passEvent}>Tokyo 2026</span>
+                      <span style={styles.passKind}>Winner</span>
+                    </div>
+                    <div style={styles.passCode}>{ticket}</div>
+                    <div style={styles.passRule} aria-hidden />
+                    <p style={styles.passHint}>One person · one ticket · one capsule</p>
+                    <div style={styles.passActions}>
+                      <button type="button" style={styles.secondary} onClick={() => void copyTicket()}>
+                        Copy ticket
+                      </button>
+                      <a href={variantHref(variant, '/claim')} style={styles.primaryLink}>
+                        Claim
+                      </a>
+                    </div>
+                  </section>
+
+                  <div style={styles.nextPerson}>
+                    <button type="button" style={styles.nextPersonBtn} onClick={nextPerson}>
+                      Next person
+                    </button>
+                    <p style={styles.nextPersonLegend}>
+                      Someone else needs a ticket — yours stays valid
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {alreadyClaimed ? (
+                <div style={styles.nextPerson}>
+                  <button type="button" style={styles.nextPersonBtn} onClick={nextPerson}>
+                    Next person
+                  </button>
+                  <p style={styles.nextPersonLegend}>
+                    Someone else can enroll — not a second ticket for you
+                  </p>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <p style={styles.eyebrow}>Limited drop</p>
+              <h1 style={styles.title}>Get your ticket</h1>
+              <p style={styles.lede}>
+                Scalpers buy with wallets. Fans prove they&apos;re human. Confirm with World ID
+                and you get one ticket — only that person can claim the capsule later.
+              </p>
+
+              <section style={styles.card}>
+                <ol style={styles.list}>
+                  <li style={styles.li}>
+                    <strong>1. World ID</strong> — prove you&apos;re a real person
+                  </li>
+                  <li style={styles.li}>
+                    <strong>2. Ticket</strong> — one code, yours alone
+                  </li>
+                  <li style={styles.li}>
+                    <strong>3. Claim</strong> — confirm again, pay from your phone wallet, get the capsule
+                  </li>
+                </ol>
+
+                {phase === 'error' && detail ? <pre style={styles.error}>{detail}</pre> : null}
+
+                <button
+                  type="button"
+                  style={styles.primary}
+                  disabled={busy || phase === 'working'}
+                  onClick={startWorld}
+                >
+                  {phase === 'working' ? 'Opening World ID…' : 'Confirm with World ID'}
+                </button>
+              </section>
+            </>
+          )}
+        </main>
+
+        <AspDemoFooter
+          onReset={() => void onReset()}
+          resetBusy={busy}
+          resetLabel="Reset demo"
+        />
+      </div>
+
+      <WorldVerifyModal
+        open={worldOpen}
+        onOpenChange={(open) => {
+          setWorldOpen(open);
+          if (!open && phase === 'working' && !ticket) setPhase('ready');
+        }}
+        action={ENROLL_ACTION}
+        signal="asp-enroll"
+        title="Confirm with World ID"
+        subtitle="One check. One ticket. Only you can claim it later."
+        successTitle="You're in"
+        successSubtitle="Close this to see your ticket."
+        onVerified={onVerified}
+        onError={(msg) => {
+          setPhase('error');
+          setDetail(msg);
+          toast.error(msg);
+        }}
+      />
+    </div>
+  );
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  shell: {
+    minHeight: '100%',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    fontFamily: aspBrand.font,
+    color: aspBrand.ink,
+    background: aspBrand.paper,
+  },
+  stage: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column' as const,
+  },
+  main: {
+    width: '100%',
+    maxWidth: 520,
+    margin: '0 auto',
+    padding: '28px 22px 14px',
+    boxSizing: 'border-box' as const,
+    flex: 1,
+  },
+  eyebrow: {
+    margin: 0,
+    fontSize: aspBrand.type.eyebrow,
+    fontWeight: 650,
+    letterSpacing: 0.08,
+    textTransform: 'uppercase' as const,
+    color: aspBrand.muted,
+  },
+  title: {
+    margin: '10px 0 10px',
+    fontSize: aspBrand.type.title,
+    fontWeight: 700,
+    letterSpacing: -0.8,
+    lineHeight: 1.06,
+  },
+  lede: {
+    margin: 0,
+    fontSize: aspBrand.type.lede,
+    lineHeight: 1.5,
+    color: aspBrand.muted,
+  },
+  claimedBanner: {
+    marginTop: 8,
+  },
+  claimedEyebrow: {
+    margin: 0,
+    fontSize: aspBrand.type.eyebrow,
+    fontWeight: 650,
+    letterSpacing: 0.08,
+    textTransform: 'uppercase' as const,
+    color: '#B42318',
+  },
+  card: {
+    marginTop: 28,
+    padding: 22,
+    background: aspBrand.paperCard,
+    border: `1px solid ${aspBrand.line}`,
+    borderRadius: 18,
+  },
+  list: {
+    margin: '0 0 20px',
+    padding: 0,
+    listStyle: 'none',
+  },
+  li: {
+    fontSize: 14,
+    lineHeight: 1.55,
+    color: aspBrand.ink,
+    marginBottom: 12,
+  },
+  error: {
+    margin: '0 0 14px',
+    padding: 12,
+    borderRadius: 12,
+    background: 'rgba(255,59,48,0.08)',
+    color: '#B42318',
+    fontSize: 12,
+    fontFamily: aspBrand.mono || 'ui-monospace, monospace',
+    whiteSpace: 'pre-wrap' as const,
+  },
+  primary: {
+    width: '100%',
+    border: 'none',
+    borderRadius: 980,
+    padding: '14px 18px',
+    fontSize: 15,
+    fontWeight: 650,
+    cursor: 'pointer',
+    background: aspBrand.ink,
+    color: aspBrand.paper,
+  },
+  pass: {
+    marginTop: 28,
+    padding: 22,
+    background: aspBrand.paperCard,
+    border: `1px solid ${aspBrand.line}`,
+    borderRadius: 18,
+  },
+  passTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    fontSize: 12,
+    fontWeight: 650,
+    letterSpacing: 0.06,
+    textTransform: 'uppercase' as const,
+    color: aspBrand.muted,
+  },
+  passEvent: {},
+  passKind: {},
+  passCode: {
+    fontSize: 36,
+    fontWeight: 750,
+    letterSpacing: 2,
+    fontFamily: aspBrand.mono || 'ui-monospace, monospace',
+    textAlign: 'center' as const,
+  },
+  passRule: {
+    height: 1,
+    background: aspBrand.line,
+    margin: '18px 0 12px',
+  },
+  passHint: {
+    margin: 0,
+    fontSize: 13,
+    color: aspBrand.muted,
+    textAlign: 'center' as const,
+  },
+  passActions: {
+    display: 'flex',
+    gap: 10,
+    marginTop: 18,
+  },
+  nextPerson: {
+    marginTop: 22,
+    textAlign: 'center' as const,
+  },
+  nextPersonBtn: {
+    width: '100%',
+    border: `1px solid ${aspBrand.lineStrong}`,
+    borderRadius: 980,
+    padding: '12px 18px',
+    fontSize: 14,
+    fontWeight: 650,
+    cursor: 'pointer',
+    background: aspBrand.paper,
+    color: aspBrand.ink,
+  },
+  nextPersonLegend: {
+    margin: '8px 0 0',
+    fontSize: 12,
+    lineHeight: 1.4,
+    color: aspBrand.muted,
+  },
+  secondary: {
+    flex: 1,
+    border: `1px solid ${aspBrand.line}`,
+    borderRadius: 980,
+    padding: '12px 14px',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    background: aspBrand.paper,
+    color: aspBrand.ink,
+  },
+  primaryLink: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 980,
+    padding: '12px 14px',
+    fontSize: 14,
+    fontWeight: 650,
+    textDecoration: 'none',
+    background: aspBrand.ink,
+    color: aspBrand.paper,
+  },
+};
