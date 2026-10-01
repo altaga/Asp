@@ -1,0 +1,19 @@
+{
+  "name": "asp-nft",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Asp Tokyo 2026 Capsule — limited NFT drop for the /test claim path (Monad).",
+  "type": "module",
+  "scripts": {
+    "wallet": "node scripts/new-wallet.mjs",
+    "compile": "node scripts/compile.mjs",
+    "balance": "node --env-file=.env scripts/balance.mjs",
+    "deploy": "node --env-file=.env scripts/deploy.mjs",
+    "mint": "node --env-file=.env scripts/mint.mjs"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.1.0",
+    "solc": "0.8.28",
+    "viem": "^2.56.8"
+  }
+}
