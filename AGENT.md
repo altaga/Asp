@@ -29,9 +29,10 @@ Technical reference for **automated buyers / orchestrators** that call Asp over 
 ```mermaid
 flowchart TB
   subgraph CLIENT["asp-dapp"]
-    UI["routes: / | /claim | /v1"]
+    UI["routes: / | /claim | /test/claim | /v1"]
     WAPI["/api/world/*"]
     KAPI["/api/kiosk/*"]
+    NAPI["/api/nft/*"]
   end
   subgraph WORLD["World"]
     IDKit["IDKit widget"]
@@ -46,14 +47,18 @@ flowchart TB
   subgraph MONAD["Monad"]
     RPC["RPC: receipts + Transfer logs"]
     FAC["x402 facilitator (x402-examples/Facilitator)"]
+    DROP["AspDrop ERC-721 (asp-nft)"]
   end
   WALLET["phone wallet (WalletConnect)"]
-  HW["asp-devices Feather"]
+  HW["asp-devices XIAO ESP32-C5"]
 
   UI --> IDKit
   UI --> WAPI
   UI --> KAPI
+  UI --> NAPI
   UI --> WALLET
+  NAPI --> KIOSK
+  NAPI --> DROP
   WALLET --> RPC
   WAPI --> Portal
   WAPI --> POL
@@ -84,6 +89,9 @@ flowchart TB
 | Monad chain | `143` (`eip155:143`); testnet `10143` | `monad/chain.js` |
 | USDC (Monad mainnet) | `0x754704Bc059F8C67012fEd69BC8A327a5aafb603` (6 decimals, EIP-3009) | `monad/chain.js` |
 | Kiosk nonce tag | first 16 bytes of `keccak256("asp-kiosk:" + nonce)`, appended to transfer calldata | `monadPayment.js` |
+| `AspDrop` (Monad mainnet) | `0x942c1a378b961fb7a95b83ecaf55fecee42c6187` (ERC-721 `ASPCAP`, cap owner-adjustable, 20 today) | `asp-nft/contracts/AspDrop.sol` |
+| Drop claim id | `keccak256("asp-drop:" + nonce)` → `AspDrop.tokenOfClaim` | `nftServer.ts` |
+| Price per claim | `2000` USDC base units (0.002 USDC) | `asp-gateway/config/devices.json` |
 | Env gateway URL | `EXPO_PUBLIC_GATEWAY_URL` | dapp |
 | Env WalletConnect | `EXPO_PUBLIC_REOWN_PROJECT_ID`, `EXPO_PUBLIC_MONAD_CHAIN_ID` | dapp |
 | Env facilitator | `FACILITATOR_URL` | gateway settings |
@@ -384,14 +392,17 @@ FILE: `asp-gateway/src/services/kiosk/routes.js`
 | POST | `/asp/kiosk/lab/intent` | none | pay-only lab; no motor |
 | POST | `/asp/kiosk/intent/:nonce/tx` | intent exists, body `{ txHash }` | verify → `paid` (200) or keep hash and wait (202) |
 | GET | `/asp/kiosk/intent/:nonce` | intent exists | poll; re-checks a pending tx hash |
-| POST | `/asp/kiosk/dispense` | body `{ nonce }`, intent paid | re-verify → assertHireAllowed → burn entitlement → MQTT (idempotent once dispensed) |
+| POST | `/asp/kiosk/dispense` | body `{ nonce }`, intent paid, `release:'motor'` | re-verify → assertHireAllowed → burn entitlement → MQTT (idempotent once dispensed) |
+| POST | `/asp/kiosk/settle` | body `{ nonce }`, intent paid, `release:'nft'` | same checks + burn as dispense, no motor; returns `payer` for the NFT release (idempotent) |
 | POST | `/asp/kiosk/reset` | demo | clear intents |
 
 `POST /asp/kiosk/intent` body:
 
 ```json
-{ "petition_id": "pet_…" }
+{ "petition_id": "pet_…", "release": "motor|nft" }
 ```
+
+`release` is fixed at intent time. Settling a payment on the other path → `wrong-release-path` (409).
 
 Errors: `missing-petition_id`, `petition-not-found`, `pending-human`, `petition-already-used`, `expired`, `invalid-skill-config`, `pay-intent-failed` (e.g. no gateway receiver configured).
 
@@ -406,6 +417,20 @@ Errors: `missing-petition_id`, `petition-not-found`, `pending-human`, `petition-
 | `GET /api/kiosk/status?nonce=` | `status+api.ts` | `/asp/kiosk/intent/:nonce` |
 | `POST /api/kiosk/complete` | `complete+api.ts` | `/asp/kiosk/dispense` |
 | `POST /api/kiosk/lab-intent` | `lab-intent+api.ts` | `/asp/kiosk/lab/intent` |
+| `POST /api/nft/drop` | `nft/drop+api.ts` | `/asp/kiosk/settle`, then `AspDrop.release(payer, claimId)` |
+| `GET /api/nft/stock` | `nft/stock+api.ts` | reads `maxSupply`, `remaining`, `nextRelease` from `AspDrop` |
+
+#### NFT release (`/test/claim`)
+
+FILE: `asp-dapp/src/features/nft/nftServer.ts` (server-only, holds `NFT_MINTER_PRIVATE_KEY`, the contract owner).
+
+1. gateway `/asp/kiosk/settle` re-verifies the USDC transfer + World petition and burns the ticket
+2. `claimId = keccak256("asp-drop:" + nonce)`; if `tokenOfClaim(claimId) != 0`, return that token (`already:true`)
+3. `remaining() == 0` → `sold-out` (410)
+4. `release(payer, claimId)` moves the next edition (in order) from the contract to the payer
+5. a race on the same nonce still resolves to the one token the contract recorded
+
+Errors: `nft-not-configured` (503), `settle-failed` / gateway codes, `payer-missing`, `sold-out`, `release-reverted`.
 
 Client helpers: `asp-dapp/src/features/kiosk/kioskPay.ts`  
 Wallet: `asp-dapp/src/features/wallet/` (`appKit.ts`, `WalletProviders.tsx`, `useWalletPay.ts`)  
@@ -464,7 +489,7 @@ makeDispatch(mqttBroker, log)(petition, skill)
 
 `resolveReceipt`: match `tx_id` in-flight; fallback only if topic ends with `/receipt`.
 
-DEVICE: `asp-devices` Feather firmware — subscribe action, spin once, publish receipt.  
+DEVICE: `asp-devices` XIAO ESP32-C5 firmware (Feather ESP32 as an alt env) — subscribe action, spin once, publish receipt.  
 Wiring/README: `asp-devices/README.md`.
 
 ---
@@ -551,6 +576,9 @@ Files: useDemoV1Flow.ts, DemoV1Page.tsx
 | `asp-dapp/src/features/wallet/*` | Reown AppKit, wagmi, `useWalletPay`, `useX402Fetch` |
 | `asp-dapp/src/app/api/kiosk/*` | checkout-intent, submit-tx, status, complete, lab-intent |
 | `x402-examples/Facilitator/` | Monad x402 facilitator |
+| `asp-nft/contracts/AspDrop.sol` | limited ERC-721, `release` once per claim id, on-chain SVG |
+| `asp-nft/scripts/*` | `wallet`, `compile`, `deploy`, `mint`, `set-max`, `balance` |
+| `asp-dapp/src/features/nft/*` | server release (`nftServer.ts`), client (`nftDrop.ts`), art mirror (`nftArt.ts`) |
 
 ### Dispatch / device
 
@@ -593,6 +621,9 @@ Dapp:
 - `EXPO_PUBLIC_WORLD_*`
 - `WORLD_RP_SIGNING_KEY` (server only)
 - `WORLD_STAGING_VERIFICATION_TOKEN`
+- `EXPO_PUBLIC_ASP_DROP_ADDRESS`, `NFT_MINTER_PRIVATE_KEY` (server only), `MONAD_RPC_URL`
+
+`GATEWAY_ADDRESS` must be a 20-byte EVM address. Anything else fails `isAddress`, and every pay intent answers `gateway-address-missing`.
 
 ---
 
