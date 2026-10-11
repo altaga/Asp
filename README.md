@@ -20,7 +20,8 @@ Anti-scalping for limited drops: every claim is a USDC payment on Monad that onl
 |---|---|
 | Chain | **Monad mainnet** (`eip155:143`), Circle USDC |
 | Track | **03 · Social, Attention & Culture**: ticketing and access that follow a *person*, not an email or a wallet |
-| On Monad | Kiosk payments verified on-chain · [`AspDrop`](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) ERC-721 with on-chain art · x402 agent payments with our own Monad facilitator |
+| On Monad | Claim payments verified on-chain · [`AspDrop`](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) ERC-721 with on-chain art · x402 agent payments with our own Monad facilitator |
+| First use case | Limited merch at live events: a pop-up drop where each verified fan gets one allocation, not one per wallet |
 | Identity | World ID (Proof of Human), so only real people reach the Monad payment |
 | Demo | A physical capsule machine (XIAO ESP32-C5) and an on-chain NFT drop, both released only after Monad confirms the payment |
 | Live | [altaga-asp.expo.app](https://altaga-asp.expo.app) |
@@ -34,7 +35,7 @@ Built inside the [Metropolis](https://monad.xyz/developers/hackathons/metropolis
 <div align="center">
   <img src="images/monad/monad-logo.svg" alt="Monad" height="40"/>
   <br/><br/>
-  <img src="images/monad-fair-drop.jpg" alt="One verified fan pays on Monad and gets one item; bots stay behind the glass" width="85%"/>
+  <img src="images/fair-drop.svg" alt="The scalper's extra wallets stop at World ID; the scalper and the fan each pay on Monad and get one allocation; the rest stays available" width="100%"/>
 </div>
 
 Monad is the source of truth in Asp. Nothing is released, whether a physical item, an NFT or an access pass, until the chain says the money arrived.
@@ -72,17 +73,21 @@ The nonce tag is `keccak256("asp-kiosk:" + nonce)`, appended to a normal `transf
 
 ### <img src="images/monad/monad-mark.svg" height="20"/> 2 · The drop lives on Monad
 
-Digital limited items get the same protection. [`AspDrop`](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) is a 20-edition ERC-721 on Monad mainnet, and the demo's collection. The art is generated **by the contract** (`tokenURI` → base64 JSON → base64 SVG), so there's no IPFS and no server to go down.
+Digital limited items go through the same flow. [`AspDrop`](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) is the demo's ERC-721 collection on Monad mainnet. The art is generated **by the contract** (`tokenURI` → base64 JSON → base64 SVG), so there's no IPFS and no server to go down.
+
+The owner pre-mints editions into the contract (`mintEditions`), and each paid claim gets the next one through `release(payer, claimId)`. The contract enforces **one release per claim id**. Deciding *who* is eligible stays with the gateway (World + payment checks); the contract never sees a person.
 
 ```mermaid
 flowchart LR
   Paid["Claim paid<br/>on Monad"]:::monad --> R["AspDrop.release(payer,<br/>keccak256('asp-drop:' + nonce))"]:::monad
-  R --> Q{"claim id<br/>already used?"}
-  Q -->|no| Mint["mint next edition<br/>to the payer"]:::monad
-  Q -->|yes| Same["return the same token,<br/>no second mint"]
-  Mint --> Art["tokenURI → SVG<br/>drawn on-chain"]:::monad
+  R --> Q{"claim id<br/>already released?"}
+  Q -->|no| Give["transfer the next<br/>pre-minted edition"]:::monad
+  Q -->|yes| Rev["revert AlreadyReleased<br/>(server returns the existing token)"]
+  Give --> Art["tokenURI → SVG<br/>drawn on-chain"]:::monad
   classDef monad fill:#836EF9,stroke:#5B45D6,color:#fff
 ```
+
+The run is configured for **20 editions**. `maxSupply` is owner-adjustable (it can't go below what's already minted), so the scarcity is a published setting you can watch on-chain through `MaxSupplyChanged`, not an immutable constant.
 
 ### <img src="images/monad/monad-mark.svg" height="20"/> 3 · Agents pay on Monad too
 
@@ -107,7 +112,7 @@ flowchart LR
 | | Why it matters for a drop |
 |---|---|
 | **Sub-second blocks** | Drops sell out in seconds and someone is standing at the counter. The payment confirms before they look up from the phone. |
-| **Cheap gas** | Verifying every claim on-chain, and minting a collectible per claim, only makes sense when it costs fractions of a cent. |
+| **Cheap gas** | Verifying every claim on-chain, and releasing a collectible per claim, only makes sense when it costs fractions of a cent. |
 | **Full EVM** | Circle USDC with EIP-3009, solc, viem, wagmi, Reown AppKit and x402's EVM scheme all work unchanged. |
 
 | On Monad mainnet | Address |
@@ -121,7 +126,7 @@ flowchart LR
 ## The problem
 
 <div align="center">
-  <img src="images/problem-scalpers.jpg" alt="Bots and a reseller sweep a limited drop of sneakers, tickets and consoles while the real fan sees SOLD OUT" width="85%"/>
+  <img src="images/problem.svg" alt="One scalper with many wallets takes the whole limited drop; the real fan sees SOLD OUT" width="100%"/>
 </div>
 
 Sneakers, concert tickets, consoles, collectible figures, art toys: every **limited** drop ends the same way. It sells out in seconds to bots, farmed accounts and resellers, the real fan sees *SOLD OUT*, and an hour later the item is on resale at 10x.
@@ -131,19 +136,26 @@ Drops are gated by things that are cheap to fake: an email, an account, a wallet
 | Question | Why a payment alone fails |
 |---|---|
 | **Who** paid? | A hot wallet is not a person. One scalper can hold a thousand. |
-| Is it the **same** person who won? | Tickets get resold the moment they exist. |
+| Is it the person the ticket was **issued** to? | Tickets get resold the moment they exist. |
 | Did they **already** claim? | A second wallet, a second account or a retry looks like a new buyer. |
 
-So Asp puts **World** in front of the Monad payment. Your ticket is welded to a zk nullifier: a number unique to you for this drop, without revealing who you are. At claim time you prove again, and only if the nullifier matches do you get to pay. One person can't become a thousand buyers, and a ticket can't be resold to someone else.
+So Asp puts **World** in front of the Monad payment. Your ticket is bound to a zk nullifier: a number unique to you for this drop, without revealing who you are. At claim time you prove again, and only if the nullifier matches do you get to pay.
+
+That gives two precise promises:
+
+- **One allocation per person per release.** You can pay from any wallet you like; switching wallets doesn't give you a second one.
+- **A ticket can only be claimed by the person it was issued to.** Selling or sharing the ticket is useless.
+
+What it doesn't promise: someone who claims an item can still resell it afterwards. Asp removes the bot rush and ticket flipping; it doesn't police the second-hand market.
 
 ```text
-Win      World selfie → ticket WIN-… bound to your nullifier
-Claim    Same human, same nullifier, or the claim dies
-Pay      Phone wallet over WalletConnect → tagged USDC transfer on Monad
-Release  Monad confirms → one item out. Never twice.
+Get      World selfie → ticket WIN-… bound to your nullifier
+Claim    Same human, same nullifier, or the claim is refused
+Pay      Any wallet, over WalletConnect → tagged USDC transfer on Monad
+Release  Monad confirms → one item out for this person. Never twice.
 ```
 
-**The demo** uses a capsule machine because it's small enough to bring to a booth: a real XIAO ESP32-C5 machine that turns once per paid claim, plus an on-chain NFT version of the same drop. The gateway doesn't care what the item is. The same flow can release a sneaker pickup, a concert entry or a console reservation.
+**The demo** uses a capsule machine because it's small enough to bring to a booth: a real XIAO ESP32-C5 machine that turns once per paid claim, plus an on-chain NFT version of the same drop. The gateway doesn't care what the item is. The first place we'd ship it is **limited merch at live events**, the pop-up stand that sells out to resellers before the show starts. The same flow can release a sneaker pickup or a console reservation.
 
 ---
 
@@ -156,7 +168,7 @@ Release  Monad confirms → one item out. Never twice.
     <td width="33%"><img src="images/shot-nft.png" alt="NFT drop"/></td>
   </tr>
   <tr>
-    <td><b>1 · Get</b><br/>Prove you're human with a World selfie. The machine holds one item for you and prints a <code>WIN-…</code> ticket.</td>
+    <td><b>1 · Get</b><br/>Prove you're human with a World selfie and get a <code>WIN-…</code> ticket bound to you. One ticket per person, and the ticket doesn't reserve stock.</td>
     <td><b>2 · Claim</b><br/>Enter the ticket, prove again (same nullifier), scan the WalletConnect QR and pay 0.002 USDC on Monad from your phone.</td>
     <td><b>3 · Release</b><br/>The gateway confirms the transfer on Monad, then the demo machine releases one item, or one <code>AspDrop</code> edition lands in your wallet.</td>
   </tr>
@@ -164,26 +176,29 @@ Release  Monad confirms → one item out. Never twice.
 
 | Route | What you see |
 |---|---|
-| [`/`](https://altaga-asp.expo.app) | Get a ticket with World |
-| [`/claim`](https://altaga-asp.expo.app/claim) | Claim it at the physical machine: pay on Monad, motor turns |
-| [`/test/claim`](https://altaga-asp.expo.app/test/claim) | Same claim, but an `AspDrop` edition is minted to your wallet on Monad |
+| [`/`](https://altaga-asp.expo.app) → [`/claim`](https://altaga-asp.expo.app/claim) | Physical machine: get a ticket, claim it, pay on Monad, the motor turns once |
+| [`/test`](https://altaga-asp.expo.app/test) → [`/test/claim`](https://altaga-asp.expo.app/test/claim) | NFT only, no hardware: same flow, and an `AspDrop` edition goes to the wallet that paid |
 
-Try to break it: use a second wallet, a different face, or the same ticket twice. Each one is refused.
+Try to break it: claim the same ticket twice, or bring a ticket that was issued to someone else. Both are refused. Paying from a second wallet doesn't help either, since the allocation follows the person, not the wallet.
 
 ---
 
 ## What makes it hold
 
-**A claim only goes through when every check passes.** If any one fails, nothing is released.
+**A claim only goes through when every check passes.** If any one fails, nothing is released. Each promise has exactly one component that enforces it:
 
-| Check | Where | Blocks |
+| Promise | Enforced by | How |
 |---|---|---|
-| USDC `Transfer` of the **exact** price, in a tx tagged with this claim's nonce | Monad | Paying for someone else, underpaying, fake tx hashes |
-| Tx hash used only once | Monad | Replaying one payment for two items |
-| At most one edition per paid claim | Monad (`AspDrop`) | Double mints on retry |
-| Proof verified server-side by World's portal | World | Bots, fake proofs |
-| Nullifier at claim = nullifier at ticket | World | Resold or shared tickets |
-| Ticket burned on release | Gateway | Second claims |
+| The proof is real | World portal, called server-side | `/api/v4/verify`, fail-closed: no verify, no petition |
+| One allocation per person per release | Gateway | Claim register keyed by `release_id + nullifier`, marked used on release |
+| A ticket only works for its owner | Gateway | Nullifier at claim must equal the nullifier the ticket was issued to |
+| Paid the exact price, for this claim | Gateway, reading Monad | USDC `Transfer` of the exact amount to the receiver, in a tx tagged with this claim's nonce |
+| One payment, one release | Gateway | Spent-tx ledger: a tx hash can only ever pay one claim |
+| One NFT per paid claim | `AspDrop` contract | `tokenOfClaim`: a second `release` for the same claim id reverts |
+
+The gateway keeps the claim register, tickets and spent tx hashes in a ledger on disk, so a restart can't reopen a claim. The demo reset is an operator-only route behind a token; there's no reset button in the public app.
+
+**What Asp doesn't do (yet):** tickets are issued to every verified person and claims are first come, first served while stock lasts. There's no lottery, and a ticket doesn't reserve an item.
 
 Every deny path, with error codes: [TECHNICAL.md](./TECHNICAL.md).
 

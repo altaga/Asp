@@ -10,7 +10,7 @@ Live: [altaga-asp.expo.app](https://altaga-asp.expo.app)
 
 ### 1. Get: `/`
 
-Prove you're human once with World ID and the dispenser holds one item for you. You get a **winner ticket** (`WIN-…`). Bring the code to the kiosk, not the browser.
+Prove you're human once with World ID and you get a **ticket** (`WIN-…`) bound to you. One per person; it doesn't reserve stock, so claims are first come, first served. Bring the code to the kiosk, not the browser.
 
 ![Get ticket](images/shot-ticket.png)
 

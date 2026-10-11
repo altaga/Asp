@@ -126,7 +126,7 @@ sequenceDiagram
   GW-->>PC: ok + tx hash
 ```
 
-On `/test/claim` the last leg swaps the motor for the chain: the dapp calls `POST /api/nft/drop` → gateway `POST /asp/kiosk/settle` (same checks, same ticket burn) → `AspDrop.release(payer, keccak256("asp-drop:" + nonce))`. `tokenOfClaim` makes it one edition per paid nonce on-chain, so retries return the same token.
+On `/test/claim` the last leg swaps the motor for the chain: the dapp calls `POST /api/nft/drop` → gateway `POST /asp/kiosk/settle` (same checks, same ticket burn) → `AspDrop.release(payer, keccak256("asp-drop:" + nonce))`. The contract enforces one release per claim id: a second `release` with the same id reverts with `AlreadyReleased`. The server wrapper reads `tokenOfClaim` first, so a retry gets the existing token back instead of an error. Human eligibility is decided before this, in the gateway; the contract only sees claim ids.
 
 ### What "paid" means
 
@@ -148,7 +148,7 @@ Anything else stays unpaid, and the motor never hears about it.
 | `payment-tx-replayed` (409) | Same tx hash already paid another intent |
 | `pending-human` | Tried to pay before World authorize |
 | `assertHireAllowed` fail | Scope / expiry / claim already used |
-| `wrong-release-path` (409) | A motor payment can't mint, and an NFT payment can't spin |
+| `wrong-release-path` (409) | A motor payment can't release an NFT, and an NFT payment can't spin the motor |
 | `sold-out` (410) | Every `AspDrop` edition is gone |
 | `esp32-no-receipt` (504) | Motor path timed out |
 | `lab-intent-no-dispense` | Gateway smoke-test payments never run the motor |
