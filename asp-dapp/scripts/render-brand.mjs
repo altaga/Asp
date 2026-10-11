@@ -14,7 +14,6 @@ const out = {
   brand: path.join(repo, 'images', 'brand'),
   capsules: path.join(repo, 'images', 'capsules'),
   appAssets: path.join(dapp, 'assets'),
-  srcAssets: path.join(dapp, 'src', 'assets'),
 };
 
 const WHITE = '#FFFFFF';
@@ -84,11 +83,6 @@ async function main() {
     await shot(browser, tile({ size: 1024, bg: 'transparent', fg: WHITE, scale: 0.2 }), a('android-icon-monochrome.png'));
     await shot(browser, solid(1024, pop.red), a('android-icon-background.png'));
     await shot(browser, lockup(pop.red, 'rgba(232,17,45,.08)'), a('splash-icon.png'));
-
-    const s = (name) => path.join(out.srcAssets, name);
-    await shot(browser, tile({ size: 512, bg: pop.red, fg: WHITE, scale: 0.34, radius: 112 }), s('logo.png'));
-    await shot(browser, mark(WHITE), s('logo-dark.png'));
-
     for (let id = 1; id <= COLORWAYS.length; id++) {
       const name = `capsule-${String(id).padStart(2, '0')}-${slug(COLORWAYS[id - 1].name)}.png`;
       await shot(browser, capsule(id, 1024), path.join(out.capsules, name));
