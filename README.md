@@ -6,6 +6,8 @@
 **One human. One item. Settled on Monad.**  
 A drop machine where every claim is a USDC payment on Monad that only a real person can make.
 
+<sub>BUILT ON</sub>&nbsp;&nbsp;<a href="https://monad.xyz"><img src="images/monad/monad-logo.svg" alt="Monad" height="22" align="absmiddle"/></a>
+
 [Live demo](https://altaga-asp.expo.app) · [AspDrop on MonadVision](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) · [NFT drop](https://altaga-asp.expo.app/test/claim) · [Technical walkthrough](./TECHNICAL.md)
 
 </div>
@@ -29,26 +31,76 @@ Built inside the [Metropolis](https://monad.xyz/developers/hackathons/metropolis
 
 ## Built on Monad
 
+<div align="center">
+  <img src="images/monad/monad-logo.svg" alt="Monad" height="40"/>
+  <br/><br/>
+  <img src="images/monad-fair-drop.jpg" alt="One fan pays on Monad and gets one capsule; bots stay behind the glass" width="85%"/>
+</div>
+
 Monad is the source of truth in Asp. A machine doesn't move, and an NFT doesn't mint, until the chain says the money arrived.
 
-### 1 · Every claim is a USDC payment on Monad
+```mermaid
+flowchart LR
+  Pay["Phone wallet<br/>USDC transfer"]:::monad --> Chain[("Monad mainnet")]:::monad
+  Agent["Agent<br/>x402 authorization"]:::monad --> Chain
+  Chain -->|receipt verified| GW[asp-gateway]
+  GW -->|one turn| Motor[Gachapon]
+  GW -->|"release()"| Drop["AspDrop<br/>on Monad"]:::monad
+  classDef monad fill:#836EF9,stroke:#5B45D6,color:#fff
+```
 
-The person pays from their own phone wallet over WalletConnect. The transfer carries a tag unique to that claim, and the gateway reads the receipt straight from Monad before doing anything:
+### <img src="images/monad/monad-mark.svg" height="20"/> 1 · Every claim is a USDC payment on Monad
 
-- the tx called Circle's USDC contract and succeeded
-- the calldata ends with **this claim's** nonce tag (`keccak256("asp-kiosk:" + nonce)`)
-- a `Transfer` log moves **exactly** the price to the gateway's receiver
-- the block is newer than the claim, and the tx hash was never used before
+The person pays from their own phone wallet over WalletConnect. The transfer carries a tag unique to that claim, and the gateway reads the receipt straight from Monad before doing anything. Every check has to pass:
 
-No `paid=true` checkbox and no payment processor. If Monad doesn't show it, nothing happens.
+```mermaid
+flowchart LR
+  Tx["tx hash from<br/>the phone"] --> A{"called Circle USDC<br/>and succeeded?"}
+  A -->|yes| B{"calldata ends with<br/>this claim's nonce tag?"}
+  B -->|yes| C{"Transfer log: exact price<br/>to the receiver?"}
+  C -->|yes| D{"newer than the claim,<br/>tx hash never used?"}
+  D -->|yes| Paid["PAID<br/>release once"]:::monad
+  A -->|no| No["stays unpaid,<br/>nothing moves"]:::deny
+  B -->|no| No
+  C -->|no| No
+  D -->|no| No
+  classDef monad fill:#836EF9,stroke:#5B45D6,color:#fff
+  classDef deny fill:#E8112D,stroke:#B00D22,color:#fff
+```
 
-### 2 · The drop lives on Monad
+The nonce tag is `keccak256("asp-kiosk:" + nonce)`, appended to a normal `transfer` call, so any wallet can pay it. There's no `paid=true` checkbox and no payment processor. If Monad doesn't show it, nothing happens.
 
-[`AspDrop`](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) is a 20-edition ERC-721 on Monad mainnet. The capsule art is generated **by the contract** (`tokenURI` → base64 JSON → base64 SVG), so there's no IPFS and no server to go down. `release(payer, claimId)` mints at most one edition per paid claim, so a retry returns the same token instead of a second one.
+### <img src="images/monad/monad-mark.svg" height="20"/> 2 · The drop lives on Monad
 
-### 3 · Agents pay on Monad too
+[`AspDrop`](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) is a 20-edition ERC-721 on Monad mainnet. The capsule art is generated **by the contract** (`tokenURI` → base64 JSON → base64 SVG), so there's no IPFS and no server to go down.
 
-Machines and services on Asp can be hired per call over **x402**, settled in USDC on Monad through our own facilitator (EIP-3009 `transferWithAuthorization`, the facilitator pays the gas). [More below](#agents-hire-over-x402-call-the-human-when-it-matters).
+```mermaid
+flowchart LR
+  Paid["Claim paid<br/>on Monad"]:::monad --> R["AspDrop.release(payer,<br/>keccak256('asp-drop:' + nonce))"]:::monad
+  R --> Q{"claim id<br/>already used?"}
+  Q -->|no| Mint["mint next edition<br/>to the payer"]:::monad
+  Q -->|yes| Same["return the same token,<br/>no second mint"]
+  Mint --> Art["tokenURI → SVG<br/>drawn on-chain"]:::monad
+  classDef monad fill:#836EF9,stroke:#5B45D6,color:#fff
+```
+
+### <img src="images/monad/monad-mark.svg" height="20"/> 3 · Agents pay on Monad too
+
+Machines and services on Asp can be hired per call over **x402**, settled in USDC on Monad through our own facilitator. The agent signs, the facilitator pays the gas, and the skill runs only after settlement.
+
+```mermaid
+flowchart LR
+  A["Agent"] -->|POST /asp/hire| GW[asp-gateway]
+  GW -->|402 + price| A
+  A -->|"retry with signed<br/>EIP-3009 authorization"| GW
+  GW -->|settle first| F["Asp facilitator"]
+  F -->|"transferWithAuthorization"| M[("USDC on Monad")]:::monad
+  M -->|settled| GW
+  GW -->|skill runs once| Done["receipt + tx hash"]
+  classDef monad fill:#836EF9,stroke:#5B45D6,color:#fff
+```
+
+[How World fits into agent hires](#agents-hire-over-x402-call-the-human-when-it-matters).
 
 ### Why Monad
 
@@ -68,7 +120,11 @@ Machines and services on Asp can be hired per call over **x402**, settled in USD
 
 ## The problem
 
-A limited capsule drops. Fans line up, and so do bots, farmed wallets and resellers.
+<div align="center">
+  <img src="images/problem-scalpers.jpg" alt="Bots, farmed wallets and a reseller swarm a limited capsule machine while the real fan walks away empty-handed" width="85%"/>
+</div>
+
+A limited capsule drops. Fans line up, and so do bots, farmed wallets and resellers. The real fan walks away with an empty capsule, and the item shows up on resale at 10x.
 
 A payment on its own tells you someone *paid*. It doesn't tell you:
 
