@@ -8,7 +8,7 @@ import { LiveFrame } from './LiveFrame';
 import { useGetTicket } from './useGetTicket';
 import { variantCopy } from './variantCopy';
 
-/** `/` and `/test` — prove human with World ID, get the ticket that holds one item at the dispenser. */
+/** `/` and `/test` — prove human with World ID, get the ticket that lets this person claim one item. */
 export function SignupPage() {
   const variant = useDemoVariant();
   const copy = variantCopy(variant);
@@ -17,12 +17,7 @@ export function SignupPage() {
   const held = get.phase === 'done' && get.ticket && !get.alreadyClaimed;
 
   return (
-    <LiveFrame
-      active="get"
-      title={variant.release === 'nft' ? 'Asp · Get (NFT test)' : 'Asp · Get'}
-      onReset={() => void get.reset()}
-      resetBusy={get.busy}
-    >
+    <LiveFrame active="get" title={variant.release === 'nft' ? 'Asp · Get (NFT test)' : 'Asp · Get'}>
       <main className="pop-stage">
         <LiveDispenser
           state="locked"

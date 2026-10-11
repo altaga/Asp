@@ -33,9 +33,9 @@ export function GetPanel(p: Props) {
       ? 'Already got yours.'
       : p.alreadyEnrolled
         ? <>Welcome back. <em>Same ticket.</em></>
-        : <>You&apos;re in. <em>It&apos;s held.</em></>;
+        : <>You&apos;re in. <em>One per person.</em></>;
   const lede = !hasTicket
-    ? `Limited run. Bots buy with wallets; fans prove they’re human. Confirm with World ID and the dispenser holds one ${p.noun} for you.`
+    ? `Limited run. Bots buy with wallets; fans prove they’re human. Confirm with World ID to get your ticket: one ${p.noun} per person, while stock lasts.`
     : p.alreadyClaimed
       ? `This World ID already claimed its ${p.noun}. Same person, same ticket — no second try.`
       : p.alreadyEnrolled

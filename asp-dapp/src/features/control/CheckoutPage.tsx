@@ -1,11 +1,10 @@
 import React from 'react';
 import { ItemReveal } from '../dispenser/ItemReveal';
 import { PopSteps } from '../dispenser/PopSteps';
-import { resetDemoClaims } from '../hire/gateway';
 import { readPendingDrop } from '../nft/pendingDrop';
 import { useDropStock } from '../nft/useDropStock';
 import { WorldVerifyModal } from '../world/WorldVerifyModal';
-import { clearDemoTicket, readDemoTicket, saveDemoTicket } from './aspDemoTicket';
+import { readDemoTicket, saveDemoTicket } from './aspDemoTicket';
 import { ClaimActions } from './ClaimActions';
 import { ClaimOutcome } from './ClaimOutcome';
 import { ClaimTicketCard } from './ClaimTicketCard';
@@ -26,8 +25,7 @@ export function CheckoutPage() {
   const copy = variantCopy(variant);
   const isNft = variant.release === 'nft';
   const flow = useCheckoutFlow({ release: variant.release });
-  const { stock, refresh: refreshStock } = useDropStock(isNft);
-  const [resetting, setResetting] = React.useState(false);
+  const { stock } = useDropStock(isNft);
   const [draft, setDraft] = React.useState('');
   const [preview] = React.useState(
     () => isNft && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('preview')
@@ -43,23 +41,6 @@ export function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once on mount
   }, []);
 
-  const onReset = async () => {
-    if (resetting || flow.busy) return;
-    setResetting(true);
-    try {
-      const out = await resetDemoClaims();
-      clearDemoTicket();
-      flow.reset();
-      setDraft('');
-      if (isNft) void refreshStock();
-      toast.success(`Demo reset — ${out?.claimsCleared ?? 0} claims, ${out?.winnersCleared ?? 0} winners wiped`);
-    } catch (e: any) {
-      toast.error(e?.message || 'Reset failed');
-    } finally {
-      setResetting(false);
-    }
-  };
-
   const loadDraft = () => {
     saveDemoTicket(draft);
     void flow.loadTicket(draft);
@@ -73,7 +54,7 @@ export function CheckoutPage() {
   const settled = phase === 'executing' || phase === 'done';
 
   return (
-    <LiveFrame active="claim" title={isNft ? 'Asp · Claim (NFT test)' : 'Asp · Claim'} onReset={() => void onReset()} resetBusy={resetting || flow.busy}>
+    <LiveFrame active="claim" title={isNft ? 'Asp · Claim (NFT test)' : 'Asp · Claim'}>
       <main className="pop-stage">
         <LiveDispenser
           key={preview ? `preview-${demo.run}` : flow.activePoh?.petition_id || 'idle'}

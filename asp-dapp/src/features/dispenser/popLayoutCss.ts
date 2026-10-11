@@ -58,8 +58,6 @@ export const POP_LAYOUT_CSS = `
 .pop-footer{max-width:1240px;width:100%;margin:0 auto;padding:0 40px 120px;display:flex;justify-content:space-between;align-items:center;
   gap:12px;font-size:13px;color:${pop.muted}}
 .pop-footer a{color:${pop.muted};font-weight:700;text-decoration:none}
-.pop-footer-reset{border:1.5px solid ${pop.line};background:${pop.paper};color:${pop.muted};border-radius:999px;padding:8px 14px;
-  font-size:13px;font-weight:700;cursor:pointer}
 .pop-error{margin:0 0 14px;padding:12px;border-radius:14px;background:rgba(232,17,45,.07);color:${pop.redDeep};font-size:12px;
   font-family:${pop.mono};white-space:pre-wrap;word-break:break-word}
 .pop-status{margin:0 0 14px;font-size:16px;line-height:1.5;font-weight:700}

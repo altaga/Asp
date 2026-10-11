@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ENROLL_ACTION, enrollWinner, resetDemoClaims } from '../hire/gateway';
+import { ENROLL_ACTION, enrollWinner } from '../hire/gateway';
 import { clearDemoTicket, saveDemoTicket } from './aspDemoTicket';
 
 const { toast } = require('react-hot-toast');
@@ -29,19 +29,6 @@ export function useGetTicket() {
     setWorldOpen(false);
     setPhase('ready');
   }, []);
-
-  const reset = useCallback(async () => {
-    setBusy(true);
-    try {
-      await resetDemoClaims();
-      nextPerson();
-      toast.success('Demo reset — Get, Claim & Backup wiped');
-    } catch (e: any) {
-      toast.error(e?.message || 'Reset failed');
-    } finally {
-      setBusy(false);
-    }
-  }, [nextPerson]);
 
   const startWorld = useCallback(() => {
     setDetail(null);
@@ -99,6 +86,6 @@ export function useGetTicket() {
   return {
     phase, ticket, alreadyEnrolled, alreadyClaimed, detail, busy, worldOpen,
     enrollAction: ENROLL_ACTION,
-    startWorld, onWorldOpenChange, onVerified, onWorldError, copyTicket, nextPerson, reset,
+    startWorld, onWorldOpenChange, onVerified, onWorldError, copyTicket, nextPerson,
   };
 }

@@ -7,13 +7,13 @@ type Props = {
   children?: React.ReactNode;
 };
 
-/** The World-bound ticket that holds one item at the dispenser: red stub, code, verified stamp. */
+/** The World-bound ticket that lets one person claim one item: red stub, code, verified stamp. */
 export function DropTicket({ code, used, children }: Props) {
   return (
     <section className="pop-ticket pop-enter" data-used={used} aria-label={used ? 'Used ticket' : 'Your ticket'}>
       <div className="pop-ticket-stub">
         <b lang="ja">限定</b>
-        <span>{used ? 'USED' : 'RESERVED'}</span>
+        <span>{used ? 'USED' : 'ADMIT ONE'}</span>
       </div>
       <div className="pop-ticket-body">
         <div className="pop-ticket-top">

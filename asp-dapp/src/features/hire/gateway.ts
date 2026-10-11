@@ -117,17 +117,5 @@ export async function revokePetition(petition_id: string) {
   return data;
 }
 
-/** Hackathon demo: clear release claim nullifiers so the same person can claim again. */
-export async function resetDemoClaims() {
-  const res = await fetch(`${gatewayBaseUrl()}/asp/demo/reset-claims`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ clear_petitions: true }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || data?.error || `Demo reset failed (${res.status})`);
-  return data;
-}
-
 export const GACHA_DEVICE_ID = 'Sub_A7C440A00001';
 export const DISPENSE_ONCE = ['DISPENSE_ONCE'] as const;
