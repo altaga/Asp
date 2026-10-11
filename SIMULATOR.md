@@ -1,6 +1,6 @@
 # Asp booth walkthrough
 
-A short guide for Metropolis judges: three screens and one machine.
+A short guide for Metropolis judges: four screens and one machine.
 
 Live: [altaga-asp.expo.app](https://altaga-asp.expo.app)
 
@@ -26,9 +26,11 @@ Same Get → Claim, but the item comes out on-chain: your paying wallet receives
 
 ![NFT drop](images/shot-nft.png)
 
-### Backup: `/v1`
+### Hire: `/chat`
 
-No pre-issued ticket. The same loop runs on the spot (World → pay → item). Useful if signup is busy.
+The other Monad door. An agent reads the gateway's skills and hires machines over x402 (USDC, EIP-3009). Ask it for a capsule and it still stops at World: the drop is PoH-locked, so a human has to prove it first.
+
+![Hire](images/shot-hire.png)
 
 ---
 
@@ -57,7 +59,6 @@ npx expo start --web --port 8087
 | `http://localhost:8087/` | Get ticket |
 | `http://localhost:8087/claim` | Kiosk claim (motor) |
 | `http://localhost:8087/test/claim` | Kiosk claim (NFT drop) |
-| `http://localhost:8087/v1` | Backup demo |
-| `http://localhost:8087/kiosk` | Pay-only lab (no World, no motor) |
+| `http://localhost:8087/chat` | Hire over x402 (agent chat) |
 
 The motor path needs the gateway and the hardware running. Without them, the UI still walks through the full Asp claim flow, and the NFT path only needs the gateway.

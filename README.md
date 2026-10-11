@@ -109,9 +109,7 @@ flowchart LR
 | `/` **Get** | World Proof of Humanity → `WIN-…` ticket |
 | `/claim` **Claim** | Ticket → same human → phone wallet pays USDC → the gachapon motor turns once |
 | `/test`, `/test/claim` **NFT drop** | Same Get → Claim, but the payer receives one `AspDrop` edition on Monad instead of a motor turn |
-| `/v1` **Backup** | World → phone wallet pay → item (no pre-issued ticket) |
-| `/kiosk` **Pay lab** | WalletConnect pay only: no World, never runs the motor |
-| `/chat` **Agent** | Agent discovers skills and hires over x402 (PoH-locked skills still need a human) |
+| `/chat` **Hire** | An agent discovers skills and hires machines over x402; PoH-locked skills still need a human |
 
 <div align="center">
   <img src="images/shot-ticket.png" alt="Get ticket" width="90%"/>
@@ -131,6 +129,13 @@ flowchart LR
   <img src="images/shot-nft.png" alt="NFT drop" width="90%"/>
 </div>
 <div align="center"><i>NFT drop: the shelf is the on-chain run, editions come out in order</i></div>
+
+<br/>
+
+<div align="center">
+  <img src="images/shot-hire.png" alt="Hire over x402" width="90%"/>
+</div>
+<div align="center"><i>Hire: the x402 door for agents, same World lock on the drop</i></div>
 
 ---
 
@@ -315,7 +320,7 @@ Anything else stays unpaid, and the motor never hears about it.
 | `wrong-release-path` (409) | A motor payment can't mint, and an NFT payment can't spin |
 | `sold-out` (410) | Every `AspDrop` edition is gone |
 | `esp32-no-receipt` (504) | Motor path timed out |
-| `lab-intent-no-dispense` | Lab pay never runs the motor |
+| `lab-intent-no-dispense` | Gateway smoke-test payments never run the motor |
 
 ### Monad file map
 
@@ -363,7 +368,7 @@ stateDiagram-v2
 # UI
 cd asp-dapp && cp .env.example .env    # Reown project id, gateway URL, World ids, AspDrop address
 npm install && npx expo start --web --port 8087
-# → http://localhost:8087   /claim   /test/claim   /v1   /kiosk
+# → http://localhost:8087   /claim   /test/claim   /chat
 
 # Gateway (separate terminal)
 cd asp-gateway && cp .env.example .env   # EVM receiver address, MQTT, facilitator URL. Never commit it.

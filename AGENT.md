@@ -29,7 +29,7 @@ Technical reference for **automated buyers / orchestrators** that call Asp over 
 ```mermaid
 flowchart TB
   subgraph CLIENT["asp-dapp"]
-    UI["routes: / | /claim | /test/claim | /v1"]
+    UI["routes: / | /claim | /test/claim | /chat"]
     WAPI["/api/world/*"]
     KAPI["/api/kiosk/*"]
     NAPI["/api/nft/*"]
@@ -169,7 +169,7 @@ Maps: `ticket → record`, `nullifier → ticket`, `session_id → ticket`.
 
 ### 3.3 Product UI phases (checkout)
 
-Informal UI phases in `useCheckoutFlow.ts` / `useDemoV1Flow.ts`:
+Informal UI phases in `useCheckoutFlow.ts`:
 `idle → awaiting_human → authorized → awaiting_phone_pay (WalletConnect) → executing → done|error|denied`
 
 ---
@@ -218,14 +218,6 @@ Do NOT prefer gateway-side World verify for live demo (token staleness → 403).
 | STEPS | portal verify → `POST {GATEWAY}/asp/proof-of-human/authorize-preverified` |
 | OUT | `{ ok, via:'dapp-verify+preverified-authorize', …gateway }` |
 | FAIL | `missing-petition_id`, `world-verify-failed`, `missing-nullifier`, `authorize-failed`, `claim_already_used` |
-
-#### `POST /api/world/enroll-session` / session bind
-
-Secondary World ID 4.0 session path. Production signup prefers legacy uniqueness enroll (`enroll`). Files: `enroll-session+api.ts`, `WorldSessionModal.tsx`.
-
-#### `POST /api/world/verify-proof`
-
-Lab-only isolated verify. File: `verify-proof+api.ts`.
 
 ### 4.3 Gateway policy HTTP
 
@@ -286,7 +278,7 @@ Gateway calls `verifyWorldProof` then authorize. Prefer dapp `poh-verify` in pro
 
 #### `POST /asp/winners/enroll` | `enroll-session` | `bind-session`
 
-Alternate enroll paths. See `routes.js` + `winners.js`.
+Gateway-side enroll paths (the gateway verifies the proof itself; World ID 4.0 sessions bind to a ticket). The dapp doesn't use them; it verifies first and calls `register`. See `routes.js` + `winners.js`.
 
 #### `GET /asp/winners/:ticket` | `GET /asp/winners`
 
@@ -389,7 +381,7 @@ FILE: `asp-gateway/src/services/kiosk/routes.js`
 | Method | Path | Precondition | Behavior |
 |---|---|---|---|
 | POST | `/asp/kiosk/intent` | petition `authorized`, unused, unexpired | create intent + pay request |
-| POST | `/asp/kiosk/lab/intent` | none | pay-only lab; no motor |
+| POST | `/asp/kiosk/lab/intent` | none | pay-only smoke test; no World, never dispenses |
 | POST | `/asp/kiosk/intent/:nonce/tx` | intent exists, body `{ txHash }` | verify → `paid` (200) or keep hash and wait (202) |
 | GET | `/asp/kiosk/intent/:nonce` | intent exists | poll; re-checks a pending tx hash |
 | POST | `/asp/kiosk/dispense` | body `{ nonce }`, intent paid, `release:'motor'` | re-verify → assertHireAllowed → burn entitlement → MQTT (idempotent once dispensed) |
@@ -416,7 +408,6 @@ Errors: `missing-petition_id`, `petition-not-found`, `pending-human`, `petition-
 | `POST /api/kiosk/submit-tx` | `submit-tx+api.ts` | `/asp/kiosk/intent/:nonce/tx` |
 | `GET /api/kiosk/status?nonce=` | `status+api.ts` | `/asp/kiosk/intent/:nonce` |
 | `POST /api/kiosk/complete` | `complete+api.ts` | `/asp/kiosk/dispense` |
-| `POST /api/kiosk/lab-intent` | `lab-intent+api.ts` | `/asp/kiosk/lab/intent` |
 | `POST /api/nft/drop` | `nft/drop+api.ts` | `/asp/kiosk/settle`, then `AspDrop.release(payer, claimId)` |
 | `GET /api/nft/stock` | `nft/stock+api.ts` | reads `maxSupply`, `remaining`, `nextRelease` from `AspDrop` |
 
@@ -434,8 +425,8 @@ Errors: `nft-not-configured` (503), `settle-failed` / gateway codes, `payer-miss
 
 Client helpers: `asp-dapp/src/features/kiosk/kioskPay.ts`  
 Wallet: `asp-dapp/src/features/wallet/` (`appKit.ts`, `WalletProviders.tsx`, `useWalletPay.ts`)  
-Pay UI: `WalletPayPanel.tsx`  
-Poll loop: `useCheckoutFlow.ts`, `useDemoV1Flow.ts`
+Pay UI: `WalletPayCard.tsx`  
+Poll loop: `useCheckoutFlow.ts`
 
 ### 5.2 Channel B — x402 hire
 
@@ -527,15 +518,16 @@ Wiring/README: `asp-devices/README.md`.
 13 UI success; second attempt → claim-already-used | already-claimed
 ```
 
-### 7.3 Backup /v1 (no ticket)
+### 7.3 NFT drop (/test/claim)
 
 ```
-Same as claim but skip ticket enroll gate; uniqueness PoH per demo flow;
-deny on claim-already-used for release nullifier.
-Files: useDemoV1Flow.ts, DemoV1Page.tsx
+Steps 1–9 as 7.2, with checkout-intent { petition_id, release:'nft' }
+10 POST /api/nft/drop { nonce } → gateway /asp/kiosk/settle (verify + burn ticket, returns payer)
+11 AspDrop.release(payer, keccak256("asp-drop:" + nonce)) → next edition in order
+12 UI reveal + MonadVision token link; retry returns the same token (already:true)
 ```
 
-### 7.4 Agent hire
+### 7.4 Agent hire (/chat)
 
 ```
 1 POST /asp/petition
@@ -558,7 +550,6 @@ Files: useDemoV1Flow.ts, DemoV1Page.tsx
 | `asp-gateway/src/services/policy/store.js` | petitions + `assertHireAllowed` |
 | `asp-gateway/src/services/policy/routes.js` | HTTP policy router |
 | `asp-dapp/src/features/world/WorldVerifyModal.tsx` | IDKit UI |
-| `asp-dapp/src/features/world/WorldSessionModal.tsx` | session UI |
 | `asp-dapp/src/features/hire/gateway.ts` | typed client to gateway + dapp proxies |
 | `asp-dapp/src/app/api/world/*` | enroll, poh-verify, rp-signature, … |
 
@@ -574,7 +565,7 @@ Files: useDemoV1Flow.ts, DemoV1Page.tsx
 | `asp-gateway/src/services/x402/routes.js` | `/asp/hire`, agent-guide |
 | `asp-dapp/src/features/kiosk/kioskPay.ts` | client kiosk pay helpers |
 | `asp-dapp/src/features/wallet/*` | Reown AppKit, wagmi, `useWalletPay`, `useX402Fetch` |
-| `asp-dapp/src/app/api/kiosk/*` | checkout-intent, submit-tx, status, complete, lab-intent |
+| `asp-dapp/src/app/api/kiosk/*` | checkout-intent, submit-tx, status, complete |
 | `x402-examples/Facilitator/` | Monad x402 facilitator |
 | `asp-nft/contracts/AspDrop.sol` | limited ERC-721, `release` once per claim id, on-chain SVG |
 | `asp-nft/scripts/*` | `wallet`, `compile`, `deploy`, `mint`, `set-max`, `balance` |
@@ -594,12 +585,13 @@ Files: useDemoV1Flow.ts, DemoV1Page.tsx
 | `asp-dapp/src/features/control/SignupPage.tsx` | Get ticket |
 | `asp-dapp/src/features/control/CheckoutPage.tsx` | Claim |
 | `asp-dapp/src/features/control/useCheckoutFlow.ts` | claim state machine |
-| `asp-dapp/src/features/control/DemoV1Page.tsx` | backup |
-| `asp-dapp/src/features/control/useDemoV1Flow.ts` | backup state machine |
-| `asp-dapp/src/features/control/WalletPayPanel.tsx` | phone wallet pay |
-| `asp-dapp/src/app/index.tsx` | `/` → SignupPage |
-| `asp-dapp/src/app/claim.tsx` | `/claim` → CheckoutPage |
-| `asp-dapp/src/app/v1.tsx` | `/v1` → DemoV1Page |
+| `asp-dapp/src/features/control/WalletPayCard.tsx` | phone wallet pay |
+| `asp-dapp/src/features/control/demoVariant.tsx` | motor (`/`) vs NFT drop (`/test`) ending |
+| `asp-dapp/src/features/dispenser/*` | dispenser shell, machine, shelves, reveal |
+| `asp-dapp/src/features/chat/*` | x402 hire chat |
+| `asp-dapp/src/app/index.tsx`, `test/index.tsx` | `/`, `/test` → SignupPage |
+| `asp-dapp/src/app/claim.tsx`, `test/claim.tsx` | `/claim`, `/test/claim` → CheckoutPage |
+| `asp-dapp/src/app/chat.tsx` | `/chat` → ChatPage in the dispenser shell |
 
 ---
 
