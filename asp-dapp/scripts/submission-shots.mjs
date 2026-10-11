@@ -13,6 +13,7 @@ fs.mkdirSync(outDir, { recursive: true });
 const shots = [
   { path: '/', file: 'shot-ticket.png', name: 'signup', waitMs: 2500 },
   { path: '/claim', file: 'shot-claim.png', name: 'claim', waitMs: 2500 },
+  { path: '/test/claim', file: 'shot-nft.png', name: 'nft-drop', waitMs: 3500 },
   { path: '/v1', file: 'shot-demo.png', name: 'demo-v1', waitMs: 2500 },
 ];
 
@@ -55,7 +56,6 @@ for (const shot of shots) {
 
     await page.waitForTimeout(200);
     const body = (await page.locator('body').innerText()).slice(0, 400);
-    const aether = /aether/i.test(body);
     const toastLeft = /Error fetching metadata/i.test(body);
 
     // Clip above typical toast dock
@@ -68,7 +68,6 @@ for (const shot of shots) {
       name: shot.name,
       url,
       out: shot.file,
-      aetherLeak: aether,
       toastLeft,
       preview: body.replace(/\s+/g, ' ').slice(0, 160),
     });
