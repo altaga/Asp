@@ -4,7 +4,7 @@
   <img src="images/brand/asp-lockup.png" alt="Asp 限定自販機" width="45%"/>
 
 **One human. One item. Settled on Monad.**  
-A drop machine where every claim is a USDC payment on Monad that only a real person can make.
+Anti-scalping for limited drops: every claim is a USDC payment on Monad that only a real, verified person can make.
 
 <sub>BUILT ON</sub>&nbsp;&nbsp;<a href="https://monad.xyz"><img src="images/monad/monad-logo.svg" alt="Monad" height="22" align="absmiddle"/></a>
 
@@ -22,7 +22,7 @@ A drop machine where every claim is a USDC payment on Monad that only a real per
 | Track | **03 · Social, Attention & Culture**: ticketing and access that follow a *person*, not an email or a wallet |
 | On Monad | Kiosk payments verified on-chain · [`AspDrop`](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) ERC-721 with on-chain art · x402 agent payments with our own Monad facilitator |
 | Identity | World ID (Proof of Human), so only real people reach the Monad payment |
-| Hardware | XIAO ESP32-C5 gachapon that turns only after Monad confirms the payment |
+| Demo | A physical capsule machine (XIAO ESP32-C5) and an on-chain NFT drop, both released only after Monad confirms the payment |
 | Live | [altaga-asp.expo.app](https://altaga-asp.expo.app) |
 
 Built inside the [Metropolis](https://monad.xyz/developers/hackathons/metropolis) window: the repo starts on 30 Sep 2026.
@@ -34,17 +34,17 @@ Built inside the [Metropolis](https://monad.xyz/developers/hackathons/metropolis
 <div align="center">
   <img src="images/monad/monad-logo.svg" alt="Monad" height="40"/>
   <br/><br/>
-  <img src="images/monad-fair-drop.jpg" alt="One fan pays on Monad and gets one capsule; bots stay behind the glass" width="85%"/>
+  <img src="images/monad-fair-drop.jpg" alt="One verified fan pays on Monad and gets one item; bots stay behind the glass" width="85%"/>
 </div>
 
-Monad is the source of truth in Asp. A machine doesn't move, and an NFT doesn't mint, until the chain says the money arrived.
+Monad is the source of truth in Asp. Nothing is released, whether a physical item, an NFT or an access pass, until the chain says the money arrived.
 
 ```mermaid
 flowchart LR
   Pay["Phone wallet<br/>USDC transfer"]:::monad --> Chain[("Monad mainnet")]:::monad
   Agent["Agent<br/>x402 authorization"]:::monad --> Chain
   Chain -->|receipt verified| GW[asp-gateway]
-  GW -->|one turn| Motor[Gachapon]
+  GW -->|release once| Item["Physical item<br/>(demo: capsule machine)"]
   GW -->|"release()"| Drop["AspDrop<br/>on Monad"]:::monad
   classDef monad fill:#836EF9,stroke:#5B45D6,color:#fff
 ```
@@ -72,7 +72,7 @@ The nonce tag is `keccak256("asp-kiosk:" + nonce)`, appended to a normal `transf
 
 ### <img src="images/monad/monad-mark.svg" height="20"/> 2 · The drop lives on Monad
 
-[`AspDrop`](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) is a 20-edition ERC-721 on Monad mainnet. The capsule art is generated **by the contract** (`tokenURI` → base64 JSON → base64 SVG), so there's no IPFS and no server to go down.
+Digital limited items get the same protection. [`AspDrop`](https://monadvision.com/address/0x942c1a378b961fb7a95b83ecaf55fecee42c6187) is a 20-edition ERC-721 on Monad mainnet, and the demo's collection. The art is generated **by the contract** (`tokenURI` → base64 JSON → base64 SVG), so there's no IPFS and no server to go down.
 
 ```mermaid
 flowchart LR
@@ -104,10 +104,10 @@ flowchart LR
 
 ### Why Monad
 
-| | Why it matters at a vending machine |
+| | Why it matters for a drop |
 |---|---|
-| **Sub-second blocks** | Someone is standing in front of the machine. The payment confirms before they look up from the phone. |
-| **Cheap gas** | Minting a collectible per claim, and verifying every claim on-chain, only makes sense when it costs fractions of a cent. |
+| **Sub-second blocks** | Drops sell out in seconds and someone is standing at the counter. The payment confirms before they look up from the phone. |
+| **Cheap gas** | Verifying every claim on-chain, and minting a collectible per claim, only makes sense when it costs fractions of a cent. |
 | **Full EVM** | Circle USDC with EIP-3009, solc, viem, wagmi, Reown AppKit and x402's EVM scheme all work unchanged. |
 
 | On Monad mainnet | Address |
@@ -121,12 +121,12 @@ flowchart LR
 ## The problem
 
 <div align="center">
-  <img src="images/problem-scalpers.jpg" alt="Bots, farmed wallets and a reseller swarm a limited capsule machine while the real fan walks away empty-handed" width="85%"/>
+  <img src="images/problem-scalpers.jpg" alt="Bots and a reseller sweep a limited drop of sneakers, tickets and consoles while the real fan sees SOLD OUT" width="85%"/>
 </div>
 
-A limited capsule drops. Fans line up, and so do bots, farmed wallets and resellers. The real fan walks away with an empty capsule, and the item shows up on resale at 10x.
+Sneakers, concert tickets, consoles, collectible figures, art toys: every **limited** drop ends the same way. It sells out in seconds to bots, farmed accounts and resellers, the real fan sees *SOLD OUT*, and an hour later the item is on resale at 10x.
 
-A payment on its own tells you someone *paid*. It doesn't tell you:
+Drops are gated by things that are cheap to fake: an email, an account, a wallet, a queue position. A payment on its own tells you someone *paid*. It doesn't tell you:
 
 | Question | Why a payment alone fails |
 |---|---|
@@ -134,14 +134,16 @@ A payment on its own tells you someone *paid*. It doesn't tell you:
 | Is it the **same** person who won? | Tickets get resold the moment they exist. |
 | Did they **already** claim? | A second wallet, a second account or a retry looks like a new buyer. |
 
-So Asp puts **World** in front of the Monad payment. Your ticket is welded to a zk nullifier: a number unique to you for this drop, without revealing who you are. At claim time you prove again, and only if the nullifier matches do you get to pay.
+So Asp puts **World** in front of the Monad payment. Your ticket is welded to a zk nullifier: a number unique to you for this drop, without revealing who you are. At claim time you prove again, and only if the nullifier matches do you get to pay. One person can't become a thousand buyers, and a ticket can't be resold to someone else.
 
 ```text
 Win      World selfie → ticket WIN-… bound to your nullifier
 Claim    Same human, same nullifier, or the claim dies
 Pay      Phone wallet over WalletConnect → tagged USDC transfer on Monad
-Release  Monad confirms → one motor turn, or one AspDrop edition. Never twice.
+Release  Monad confirms → one item out. Never twice.
 ```
+
+**The demo** uses a capsule machine because it's small enough to bring to a booth: a real XIAO ESP32-C5 machine that turns once per paid claim, plus an on-chain NFT version of the same drop. The gateway doesn't care what the item is. The same flow can release a sneaker pickup, a concert entry or a console reservation.
 
 ---
 
@@ -156,7 +158,7 @@ Release  Monad confirms → one motor turn, or one AspDrop edition. Never twice.
   <tr>
     <td><b>1 · Get</b><br/>Prove you're human with a World selfie. The machine holds one item for you and prints a <code>WIN-…</code> ticket.</td>
     <td><b>2 · Claim</b><br/>Enter the ticket, prove again (same nullifier), scan the WalletConnect QR and pay 0.002 USDC on Monad from your phone.</td>
-    <td><b>3 · Release</b><br/>The gateway confirms the transfer on Monad, then the gachapon turns once, or one <code>AspDrop</code> edition lands in your wallet.</td>
+    <td><b>3 · Release</b><br/>The gateway confirms the transfer on Monad, then the demo machine releases one item, or one <code>AspDrop</code> edition lands in your wallet.</td>
   </tr>
 </table>
 
@@ -191,21 +193,17 @@ Every deny path, with error codes: [TECHNICAL.md](./TECHNICAL.md).
 
 ```mermaid
 flowchart LR
-  Human((Human)) -->|World selfie| Dapp[asp-dapp]
-  Dapp --> GW[asp-gateway]
-  Agent((Agent)) -->|x402| GW
+  H(("Human")):::person -->|"1. prove"| W["World ID"]:::world
+  W -->|"2. ticket bound<br/>to nullifier"| GW["asp-gateway<br/>one human, one item"]
+  H -->|"3. pay USDC<br/>WalletConnect"| M[("Monad<br/>mainnet")]:::monad
+  A(("Agent")):::person -->|"x402 hire"| M
+  M -->|"4. payment<br/>verified on-chain"| GW
+  GW -->|"5. release once"| I["Limited item<br/>machine · NFT · access"]:::item
 
-  subgraph Monad["Monad mainnet"]
-    USDC[USDC transfer]
-    X402[x402 settlement]
-    Drop[AspDrop NFT]
-  end
-
-  Human -->|WalletConnect| USDC
-  USDC -->|receipt verified| GW
-  X402 --> GW
-  GW -->|release| Drop
-  GW -->|MQTT| Motor[Gachapon]
+  classDef monad fill:#836EF9,stroke:#5B45D6,color:#fff
+  classDef world fill:#231815,stroke:#888,color:#fff
+  classDef person fill:#FFF8EF,stroke:#E8112D,color:#231815
+  classDef item fill:#E8112D,stroke:#B00D22,color:#fff
 ```
 
 | Package | Job |
@@ -214,13 +212,13 @@ flowchart LR
 | [`asp-nft`](asp-nft) | `AspDrop.sol`: ERC-721 limited run on Monad with on-chain SVG |
 | [`asp-dapp`](asp-dapp) | Dispenser UI (Expo web), World verify, WalletConnect pay on Monad (Reown AppKit + wagmi), NFT release |
 | [`x402-examples`](x402-examples) | Monad x402 facilitator for agent hires |
-| [`asp-devices`](asp-devices) | XIAO ESP32-C5 firmware: waits for one dispense from the gateway |
+| [`asp-devices`](asp-devices) | XIAO ESP32-C5 firmware for the demo machine: waits for one release from the gateway |
 
 ---
 
-## The capsules
+## The demo collection
 
-Ten colorways, twenty editions, all drawn by the contract on Monad.
+For the booth we made a small drop of capsule art toys: ten colorways, twenty editions, all drawn by the contract on Monad.
 
 <div align="center">
   <img src="images/capsules/capsule-01-monad-violet.png" width="9%"/>
