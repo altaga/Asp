@@ -4,6 +4,7 @@ import { describeConfig } from './utils/utils.js';
 import { createMqttBroker }       from './services/mqtt/broker.js';
 import { makeDispatch, resolveReceipt, inFlight } from './services/dispatch/dispatcher.js';
 import { createGatewayApp }       from './app.js';
+import { flushLedger, ledgerStats } from './services/ledger/ledger.js';
 
 const TAG = '[GATEWAY]';
 const C = {
@@ -81,6 +82,7 @@ const server = http.createServer(app);
 async function main() {
   banner('ASP GATEWAY BOOT');
   describeConfig(log);
+  info(`ledger restored: ${JSON.stringify(ledgerStats())}`);
 
   server.listen(settings.http.port, settings.http.host, () => {
     ok(`http server listening on ${settings.http.host}:${settings.http.port}`);
@@ -158,6 +160,8 @@ async function main() {
     }
     isShuttingDown = true;
     log(`\n${sig} — shutting down…`);
+
+    try { flushLedger(); } catch (err) { fail(`ledger flush failed: ${err.message}`); }
     
     try { await broker.stop(); } catch {}
     

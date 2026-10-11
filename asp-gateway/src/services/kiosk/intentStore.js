@@ -1,10 +1,11 @@
 /**
- * In-memory kiosk payment intents (hackathon). Restart clears state.
+ * Kiosk payment intents, persisted through the ledger so a paid claim survives a restart.
  * Unique nonce → WalletConnect USDC transfer on Monad; PC polls until paid, then dispenses.
  */
+import { ledgerMap } from '../ledger/ledger.js';
 
-const intents = new Map(); // nonce → intent
-const consumedTx = new Map(); // txHash (lowercase) → nonce
+const intents = ledgerMap('intents'); // nonce → intent
+const consumedTx = ledgerMap('consumedTx'); // txHash (lowercase) → nonce
 
 function nowMs() {
   return Date.now();

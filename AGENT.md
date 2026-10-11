@@ -19,7 +19,7 @@ Technical reference for **automated buyers / orchestrators** that call Asp over 
 5. Ticket `WIN-*` binds to one nullifier; claim must present matching nullifier
 6. Claim World proof `signal` SHOULD equal `petition_id`
 7. Lab pay intents NEVER dispatch motor (`lab-intent-no-dispense`)
-8. In-memory stores (winners, petitions, intents, used tx hashes) RESET on gateway process restart
+8. Winners, petitions, release claims, intents and used tx hashes live in the disk ledger (`services/ledger/ledger.js`, `ASP_DATA_DIR`) and SURVIVE gateway restarts
 9. Physical dispense is MQTT single-shot; one Monad tx hash can pay at most one intent
 
 ---
@@ -290,7 +290,7 @@ Terminal negative states.
 
 #### `POST /asp/demo/reset-claims`
 
-Clears claim registers for repeatable booth demo.
+Operator-only. Clears claim registers for a repeatable booth demo. Requires header `x-asp-admin: $ASP_ADMIN_TOKEN`; with no token configured the route answers `403 admin-disabled`. The spent-tx ledger is never cleared.
 
 ### 4.4 `verifyWorldProof` semantics
 
@@ -386,7 +386,7 @@ FILE: `asp-gateway/src/services/kiosk/routes.js`
 | GET | `/asp/kiosk/intent/:nonce` | intent exists | poll; re-checks a pending tx hash |
 | POST | `/asp/kiosk/dispense` | body `{ nonce }`, intent paid, `release:'motor'` | re-verify → assertHireAllowed → burn entitlement → MQTT (idempotent once dispensed) |
 | POST | `/asp/kiosk/settle` | body `{ nonce }`, intent paid, `release:'nft'` | same checks + burn as dispense, no motor; returns `payer` for the NFT release (idempotent) |
-| POST | `/asp/kiosk/reset` | demo | clear intents |
+| POST | `/asp/kiosk/reset` | operator (`x-asp-admin`) | clear intents |
 
 `POST /asp/kiosk/intent` body:
 

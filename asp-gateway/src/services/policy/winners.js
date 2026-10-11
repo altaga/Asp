@@ -1,13 +1,14 @@
 /**
- * Demo winners registry (in-memory).
+ * Ticket registry, persisted through the ledger.
  * Signup: World Selfie Check (legacy uniqueness) → virtual ticket bound to nullifier.
  * Kiosk: same person proves again (same enroll action → same nullifier) + signal=petition_id.
  * Optional: World ID 4.0 session_id bind when Self Check 4.0 sessions are available.
  */
+import { ledgerMap } from '../ledger/ledger.js';
 
-const winnersByTicket = new Map(); // ticket → record
-const ticketByNullifier = new Map(); // nullifier → ticket
-const ticketBySession = new Map(); // session_id → ticket
+const winnersByTicket = ledgerMap('winnersByTicket'); // ticket → record
+const ticketByNullifier = ledgerMap('ticketByNullifier'); // nullifier → ticket
+const ticketBySession = ledgerMap('ticketBySession'); // session_id → ticket
 
 function nowMs() {
   return Date.now();

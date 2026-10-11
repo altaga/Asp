@@ -1,10 +1,11 @@
 ﻿/**
- * In-memory Asp policy store (hackathon). Restart clears state.
+ * Asp policy store, persisted through the ledger so restarts keep every claim.
  * Holds petitions, human authorizations, and release claim nullifiers.
  */
+import { ledgerMap } from '../ledger/ledger.js';
 
-const petitions = new Map();
-const claimsByReleaseNullifier = new Map(); // `${release_id}::${nullifier}` → claim
+const petitions = ledgerMap('petitions');
+const claimsByReleaseNullifier = ledgerMap('claimsByReleaseNullifier'); // `${release_id}::${nullifier}` → claim
 
 function nowMs() {
   return Date.now();

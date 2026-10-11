@@ -20,6 +20,7 @@ import {
   resetWinners,
 } from './winners.js';
 import { clearIntents } from '../kiosk/intentStore.js';
+import { requireAdmin } from './adminGate.js';
 import { verifyWorldProof } from './pohVerify.js';
 
 export const ENROLL_ACTION = 'asp-enroll-metropolis-capsule-v1';
@@ -651,8 +652,9 @@ export function createPolicyRouter() {
     return res.json({ ok: true, petition: publicPetition(result.petition) });
   });
 
-  // POST /asp/demo/reset-claims — clear nullifier claim register for repeatable demo
+  // POST /asp/demo/reset-claims — operator-only wipe for a repeatable booth demo
   router.post('/asp/demo/reset-claims', (req, res) => {
+    if (!requireAdmin(req, res)) return;
     const clearPetitions = req.body?.clear_petitions !== false;
     const result = resetDemoClaims({ clearPetitions });
     const winners = resetWinners();

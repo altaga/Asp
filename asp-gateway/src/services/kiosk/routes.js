@@ -9,6 +9,7 @@ import {
   touchExpiry,
 } from '../policy/store.js';
 import { markWinnerClaimed } from '../policy/winners.js';
+import { requireAdmin } from '../policy/adminGate.js';
 import {
   clearIntents,
   consumeTx,
@@ -474,8 +475,9 @@ export function createKioskRouter({ dispatch }) {
     }
   });
 
-  // Demo helper: also wipe kiosk intents when clearing claims
-  router.post('/asp/kiosk/reset', (_req, res) => {
+  // Operator-only: wipe kiosk intents (the spent-tx ledger is never cleared)
+  router.post('/asp/kiosk/reset', (req, res) => {
+    if (!requireAdmin(req, res)) return;
     const cleared = clearIntents();
     return res.json({ ok: true, intentsCleared: cleared });
   });
