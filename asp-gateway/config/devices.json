@@ -10,7 +10,7 @@
       {
         "id": "skill_gacha_dispense_once",
         "name": "Dispense one capsule",
-        "description": "Dispense a single capsule for this limited release. Requires Proof of Human, scoped authorization, unused claim, and x402 payment before the motor runs.",
+        "description": "Dispense a single capsule for this limited release. Requires Proof of Human, scoped authorization, unused claim, and a verified USDC payment on Monad before the motor runs.",
         "command": ["DISPENSE_ONCE"],
         "proof_of_human": {
           "required": true,
