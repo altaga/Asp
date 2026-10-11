@@ -70,11 +70,6 @@ export async function createCheckoutPayment(petition_id: string, release: Releas
   );
 }
 
-/** Lab only: pay request with no World and no motor. */
-export async function createLabPayment() {
-  return toPayment(await call('/api/kiosk/lab-intent', { method: 'POST', body: '{}' }));
-}
-
 export async function submitPaymentTx(nonce: string, txHash: string) {
   return call<{ ok: boolean; paid: boolean; error?: string; intent: KioskIntentStatus }>(
     '/api/kiosk/submit-tx',

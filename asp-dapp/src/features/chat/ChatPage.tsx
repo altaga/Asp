@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import logoImage from '../../assets/logo.png';
 import { MessageBubble } from './MessageBubble';
 import { useAspChat } from './useAspChat';
 import { WorldVerifyModal } from '../world/WorldVerifyModal';
@@ -52,12 +51,14 @@ export function ChatPage() {
   return (
     <div>
       <div style={styles.headerRow}>
-        <div style={styles.brand}>
-          <img src={logoImage} alt="Asp" style={styles.logo} />
-          <div>
-            <div style={styles.brandName}>Asp Chat</div>
-            <div style={styles.brandSub}>PoH-gated device hire</div>
-          </div>
+        <div>
+          <p className="pop-eyebrow">
+            <b lang="ja">雇う</b> Hire a machine · x402
+          </p>
+          <h1 className="pop-title" style={styles.title}>
+            Agents can <em>knock.</em>
+          </h1>
+          <p style={styles.brandSub}>Machines with a World lock still need the human to prove it.</p>
         </div>
         <button type="button" style={styles.chip} onClick={() => void onWalletClick()}>
           {address ? `${shortAddr(address)} · Disconnect` : 'Connect wallet'}
@@ -130,13 +131,13 @@ const styles: Record<string, React.CSSProperties> = {
   headerRow: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-end',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginBottom: 20,
   },
-  brand: { display: 'flex', alignItems: 'center', gap: 12 },
-  logo: { width: 36, height: 36, borderRadius: 10 },
-  brandName: { fontSize: 17, fontWeight: 650 },
-  brandSub: { fontSize: 12, color: theme.textSecondary },
+  title: { fontSize: 40, margin: '6px 0 8px' },
+  brandSub: { margin: 0, fontSize: 15, color: theme.textSecondary },
   messageList: { minHeight: 360, marginBottom: 12 },
   quickRow: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   chip: {

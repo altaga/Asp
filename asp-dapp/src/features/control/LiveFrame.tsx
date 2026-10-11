@@ -23,12 +23,7 @@ export function LiveFrame({ active, title, onReset, resetBusy, children }: Props
       badge={variant.release === 'nft' ? 'NFT test' : undefined}
       footer={
         <>
-          <span>
-            {POP_EVENT} · one human, one item
-            {variant.release === 'motor' ? (
-              <> · <a href="/v1" title="Claim without a ticket">No ticket?</a></>
-            ) : null}
-          </span>
+          <span>{POP_EVENT} · one human, one item</span>
           <button type="button" className="pop-footer-reset" disabled={resetBusy} onClick={onReset}>
             {resetBusy ? 'Resetting…' : 'Reset demo'}
           </button>

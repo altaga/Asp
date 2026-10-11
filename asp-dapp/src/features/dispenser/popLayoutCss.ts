@@ -63,6 +63,7 @@ export const POP_LAYOUT_CSS = `
 .pop-error{margin:0 0 14px;padding:12px;border-radius:14px;background:rgba(232,17,45,.07);color:${pop.redDeep};font-size:12px;
   font-family:${pop.mono};white-space:pre-wrap;word-break:break-word}
 .pop-status{margin:0 0 14px;font-size:16px;line-height:1.5;font-weight:700}
+.pop-chat{flex:1;width:100%;max-width:820px;margin:0 auto;padding:32px 24px 80px}
 .pop-input{width:100%;padding:10px 16px;border:2px solid rgba(35,24,21,.12);border-radius:18px;background:${pop.cream};min-width:0}
 
 @media (max-width:960px){
@@ -70,6 +71,7 @@ export const POP_LAYOUT_CSS = `
   .pop-hero{position:static}
   .pop-title{font-size:38px}
   .pop-header-inner{padding:10px 18px}
+  .pop-nav a{padding:8px 14px;font-size:14px}
   .pop-header-side .pop-chip,.pop-brand-jp{display:none}
   .pop-footer{padding:0 20px 120px}
 }

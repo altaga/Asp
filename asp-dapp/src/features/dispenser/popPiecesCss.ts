@@ -1,6 +1,6 @@
 import { pop } from './popTheme';
 
-/** Stock meter, drop ticket, dispenser, reveal and the proposal switcher. */
+/** Stock meter, drop ticket, dispenser and reveal. */
 export const POP_PIECES_CSS = `
 .pop-stock{width:100%;max-width:560px;background:${pop.paper};border-radius:26px;padding:18px 22px 18px;
   box-shadow:0 2px 0 ${pop.line},0 14px 30px rgba(35,24,21,.06)}
@@ -59,16 +59,6 @@ export const POP_PIECES_CSS = `
 .pop-meta dd{margin:2px 0 0;font-family:${pop.mono};font-size:14px;font-weight:700}
 .pop-meta a{color:${pop.violet}}
 .pop-wallet-tip{margin-top:16px;padding:12px 14px;border-radius:16px;background:rgba(131,110,249,.08);font-size:14px;line-height:1.5}
-
-.pop-switcher{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:6px;
-  max-width:calc(100vw - 24px);overflow-x:auto;padding:7px;border-radius:999px;background:rgba(35,24,21,.92);color:#fff;
-  box-shadow:0 12px 30px rgba(0,0,0,.25)}
-.pop-switcher-label{padding:0 10px;font-size:11px;font-weight:900;letter-spacing:.1em;color:${pop.yellow};white-space:nowrap}
-.pop-switcher button,.pop-switcher a{border:none;background:transparent;color:rgba(255,255,255,.7);padding:8px 13px;border-radius:999px;
-  font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none}
-.pop-switcher [aria-pressed=true]{background:#fff;color:${pop.ink}}
-.pop-switcher-sep{width:1px;height:20px;background:rgba(255,255,255,.2);flex:none}
-
 @media (max-width:960px){
   .pop-reveal{grid-template-columns:1fr;justify-items:center;text-align:center}
   .pop-badges{justify-content:center}

@@ -6,7 +6,7 @@ import { isPopMuted, setPopMuted } from './popSound';
 import { POP_FONTS_HREF } from './popTheme';
 
 type Props = {
-  active: 'get' | 'claim';
+  active: 'get' | 'claim' | 'hire';
   title: string;
   getHref: string;
   claimHref: string;
@@ -54,6 +54,9 @@ export function DispenserShell({ active, title, getHref, claimHref, badge, foote
           <nav className="pop-nav" aria-label="Primary">
             <a href={getHref} aria-current={active === 'get' ? 'page' : undefined}>Get</a>
             <a href={claimHref} aria-current={active === 'claim' ? 'page' : undefined}>Claim</a>
+            <a href="/chat" aria-current={active === 'hire' ? 'page' : undefined} title="Agents hire machines over x402">
+              Hire
+            </a>
           </nav>
           <div className="pop-header-side">
             {badge ? <span className="pop-chip pop-chip-test">{badge}</span> : null}

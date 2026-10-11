@@ -1,6 +1,7 @@
 import { Slot } from 'expo-router';
 import { LogBox } from 'react-native';
 import { WalletProviders } from '../features/wallet/WalletProviders';
+import { theme } from '../theme/tokens';
 
 LogBox.ignoreLogs([
   'User rejected the request',
@@ -26,7 +27,7 @@ if (typeof window !== 'undefined' && !(window as any).__aspToastFilter) {
 export default function Layout() {
   return (
     <WalletProviders>
-      <div style={{ height: '100vh', overflowY: 'auto', backgroundColor: '#F5F5F7', color: '#1D1D1F' }}>
+      <div style={{ height: '100vh', overflowY: 'auto', backgroundColor: theme.bg, color: theme.text }}>
         <style>{`
           @keyframes aspPulse {
             0%, 80%, 100% { opacity: 0.35; transform: translateY(0); }
@@ -45,12 +46,12 @@ export default function Layout() {
           toastOptions={{
             duration: 8000,
             style: {
-              background: '#FFFFFF',
-              color: '#1D1D1F',
-              border: '1px solid rgba(0,0,0,0.08)',
-              borderRadius: '12px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+              background: theme.surface,
+              color: theme.text,
+              border: `1px solid ${theme.border}`,
+              borderRadius: '14px',
+              boxShadow: theme.shadow,
+              fontFamily: theme.font,
               fontSize: '13px',
               padding: '10px 12px',
               maxWidth: '320px',

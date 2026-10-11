@@ -3,7 +3,7 @@ import { FALL_MS } from './dispenserLayout';
 import { buzz, popSound } from './popSound';
 
 type Options = {
-  /** PUSH is pressable (proposal flow). */
+  /** PUSH is pressable by hand. */
   enabled: boolean;
   /** The system is releasing an item right now (real flow: payment settled) — vend without a press. */
   forced?: boolean;
