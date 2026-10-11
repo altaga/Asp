@@ -144,23 +144,6 @@ Ten colorways, twenty editions. `tokenURI` returns base64 JSON with a base64 SVG
 
 ---
 
-## Run it
-
-```bash
-# UI → http://localhost:8087
-cd asp-dapp && cp .env.example .env && npm install && npx expo start --web --port 8087
-
-# Gateway (separate terminal)
-cd asp-gateway && cp .env.example .env && npm install && npm start
-
-# Your own AspDrop run (optional)
-cd asp-nft && npm install && npm run wallet && npm run compile && npm run deploy && npm run mint
-```
-
-Booth steps: [SIMULATOR.md](./SIMULATOR.md) · Firmware: [asp-devices](asp-devices/README.md) · Deep dive: [TECHNICAL.md](./TECHNICAL.md)
-
----
-
 ## Agents: hire over x402, call the human when it matters
 
 The booth is one machine. Behind it, the gateway is a marketplace where **agents hire agents, services and devices**, paying per call in USDC on Monad over [x402](https://x402.org): `POST /asp/hire` answers `402`, the agent signs a USDC authorization, and a Monad facilitator settles it. No accounts, no API keys.
