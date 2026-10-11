@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Stop'
 Set-Location (git rev-parse --show-toplevel)
 $failed = $false
 
-$forbidden = '(?i)(^|/)(\.env(\..+)?|creds\.h|process(\..+)?\.json|wallet[^/]*\.json|[^/]+\.(pem|key|ppk)|tx_audit\.json|gacha-device-creds\.json)$|^(VM|old|Docs|Skills|\.cursor|@altaga-x402-sui)/'
+$forbidden = '(?i)(^|/)(\.env(\..+)?|creds\.h|process(\..+)?\.json|wallet[^/]*\.json|[^/]+\.(pem|key|ppk)|tx_audit\.json|gacha-device-creds\.json)$|^(VM|old|Docs|Skills|\.cursor)/'
 $files = if ($StagedOnly) { git diff --cached --name-only --diff-filter=ACMR } else { git ls-files }
 $bad = $files | Where-Object { $_ -match $forbidden -and $_ -notmatch '\.env\.example$' }
 if ($bad) {

@@ -4,11 +4,6 @@ title = "Asp secret scan"
 useDefault = true
 
 [[rules]]
-id = "sui-private-key"
-description = "Sui bech32 private key"
-regex = '''suiprivkey1[0-9a-z]{50,}'''
-
-[[rules]]
 id = "evm-private-key-literal"
 description = "Hardcoded EVM private key passed to a viem/ethers signer"
 regex = '''(?i)(privateKeyToAccount|new\s+Wallet|fromPrivateKey)\(\s*["'`]?(0x)?[0-9a-f]{64}'''
