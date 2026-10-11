@@ -75,27 +75,26 @@ function renderUserPage({ req, gatewayAddress }) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Asp Gateway</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" />
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #07090d;
-      --panel: rgba(17, 22, 31, 0.88);
-      --panel-2: rgba(13, 18, 26, 0.88);
-      --line: rgba(255,255,255,0.08);
-      --text: #f5f7fb;
-      --muted: #98a2b3;
-      --accent: #7c9cff;
-      --accent-2: #36d0a5;
-      --shadow: 0 24px 80px rgba(0,0,0,0.45);
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: light;
+      --bg: #FFF8EF;
+      --panel: #FFFFFF;
+      --panel-2: #FFF8EF;
+      --line: rgba(35,24,21,0.1);
+      --text: #231815;
+      --muted: #7B6F69;
+      --accent: #E8112D;
+      --accent-2: #836EF9;
+      --shadow: 0 2px 0 rgba(35,24,21,0.08), 0 18px 40px rgba(35,24,21,0.06);
+      font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Helvetica Neue", Arial, sans-serif;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background:
-        radial-gradient(circle at top left, rgba(124,156,255,0.16), transparent 32%),
-        radial-gradient(circle at top right, rgba(54,208,165,0.14), transparent 30%),
-        var(--bg);
+      border-top: 6px solid var(--accent);
+      background: var(--bg) radial-gradient(rgba(232,17,45,.07) 1.6px, transparent 1.6px) 0 0 / 22px 22px;
       color: var(--text);
     }
     a { color: inherit; text-decoration: none; }
@@ -120,14 +119,16 @@ function renderUserPage({ req, gatewayAddress }) {
       padding: 10px 14px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      background: rgba(255,255,255,0.03);
+      background: var(--panel);
       font-size: 14px;
+      font-weight: 700;
     }
     .cta.primary {
-      background: linear-gradient(135deg, var(--accent), #95a9ff);
-      color: #0d1220;
-      font-weight: 700;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 900;
       border: none;
+      box-shadow: 0 4px 0 #B80A20;
     }
     .hero {
       padding: 48px;
@@ -149,7 +150,7 @@ function renderUserPage({ req, gatewayAddress }) {
     .eyebrow { color: var(--accent-2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 10px; }
     .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 18px; }
     .card {
-      background: rgba(255,255,255,0.03);
+      background: var(--panel-2);
       border: 1px solid var(--line);
       border-radius: 18px;
       padding: 22px;
@@ -163,11 +164,11 @@ function renderUserPage({ req, gatewayAddress }) {
       font-size: 11px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #09111f;
-      background: var(--accent-2);
+      color: #fff;
+      background: var(--accent);
       font-weight: 700;
     }
-    .pill.subtle { background: rgba(255,255,255,0.08); color: var(--text); }
+    .pill.subtle { background: rgba(131,110,249,0.1); color: var(--accent-2); }
     .meta { margin-top: 14px; display: grid; gap: 10px; }
     .meta div { display: grid; gap: 4px; }
     .meta dt { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -178,7 +179,7 @@ function renderUserPage({ req, gatewayAddress }) {
     .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     .step {
       padding: 20px;
-      background: rgba(255,255,255,0.03);
+      background: var(--panel-2);
       border: 1px solid var(--line);
       border-radius: 18px;
     }
@@ -188,9 +189,9 @@ function renderUserPage({ req, gatewayAddress }) {
       overflow-x: auto;
       padding: 20px;
       border-radius: 18px;
-      background: #05070b;
+      background: #231815;
       border: 1px solid var(--line);
-      color: #d7def0;
+      color: #FFF8EF;
       font-size: 13px;
       line-height: 1.6;
     }
@@ -221,9 +222,9 @@ function renderUserPage({ req, gatewayAddress }) {
         <div class="eyebrow">Human-Friendly Overview</div>
         <h1>Hire real Asp capabilities over x402.</h1>
         <p class="lead">
-          This gateway exposes paid machine actions and agentic services over HTTP.
-          Clients discover available skills, request a paid action through x402, sign the payment,
-          and receive an execution receipt from the gateway.
+          Machines you can hire on Monad. Clients discover skills, request a paid action through x402,
+          sign a USDC authorization and get an execution receipt back. Skills with a World lock
+          (like the limited drop) won't move until a real human proves it.
         </p>
         <div class="hero-actions">
           <a class="cta primary" href="/agentic">Open Agentic Integration Guide</a>
@@ -349,13 +350,13 @@ function renderAgenticPage({ req, gatewayAddress }) {
   <style>
     :root {
       color-scheme: dark;
-      --bg: #05070a;
-      --panel: #0d121a;
-      --line: rgba(255,255,255,0.08);
-      --text: #e8edf7;
-      --muted: #96a0b5;
-      --accent: #70e0b8;
-      --accent-2: #89a8ff;
+      --bg: #160E0C;
+      --panel: #231815;
+      --line: rgba(255,248,239,0.1);
+      --text: #FFF8EF;
+      --muted: #B8ABA4;
+      --accent: #FF4D62;
+      --accent-2: #A796FF;
       font-family: "SFMono-Regular", Consolas, Menlo, Monaco, monospace;
     }
     * { box-sizing: border-box; }
@@ -387,9 +388,9 @@ function renderAgenticPage({ req, gatewayAddress }) {
       overflow-x: auto;
       padding: 18px;
       border-radius: 16px;
-      background: #030507;
+      background: #0E0807;
       border: 1px solid var(--line);
-      color: #d6def7;
+      color: #FFF8EF;
       font-size: 12.5px;
       line-height: 1.6;
     }
