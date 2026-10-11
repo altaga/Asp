@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "asp-dapp",
+    "name": "Asp",
     "slug": "asp",
     "scheme": "asp-dapp",
     "version": "1.0.0",
@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#000000",
+        "backgroundColor": "#E8112D",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

@@ -7,7 +7,6 @@ export type AspRoute = 'signup' | 'kiosk' | 'v1';
 /** Demo brand — monochrome protocol. No rental-lime, no Apple blue. */
 export const aspBrand = {
   ink: '#111111',
-  /** Match logo-dark.png canvas (#090909) so the mark doesn't float on a different black. */
   header: '#090909',
   paper: '#FAFAFA',
   paperCard: '#FFFFFF',
@@ -142,7 +141,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   logo: {
     width: 88,
-    height: 88,
+    height: 40,
     display: 'block',
     objectFit: 'contain' as const,
   },

@@ -49,6 +49,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web --port 8087",
+    "brand": "node --experimental-strip-types scripts/render-brand.mjs",
     "webprod": "npx expo export -p web && eas deploy --prod"
   },
   "private": true
