@@ -115,7 +115,7 @@ flowchart LR
 | [`asp-gateway`](asp-gateway) | PoH gate, ticket ↔ nullifier registry, on-chain USDC verify, MQTT dispatch |
 | [`asp-nft`](asp-nft) | `AspDrop.sol`: ERC-721 limited run with on-chain SVG |
 | [`asp-devices`](asp-devices) | XIAO ESP32-C5 firmware: waits for one dispense from the gateway |
-| [`x402-examples`](x402-examples) | Monad x402 facilitator (see [below](#extra-hire-a-machine-over-x402)) |
+| [`x402-examples`](x402-examples) | Monad x402 facilitator for agent hires (see [below](#agents-hire-over-x402-call-the-human-when-it-matters)) |
 
 ---
 
@@ -161,8 +161,38 @@ Booth steps: [SIMULATOR.md](./SIMULATOR.md) · Firmware: [asp-devices](asp-devic
 
 ---
 
-## Extra: hire a machine over x402
+## Agents: hire over x402, call the human when it matters
 
-Not part of the drop demo. The same gateway also lets agents and apps rent a machine per use: `POST /asp/hire` answers `402`, the caller signs a USDC authorization, and a Monad facilitator settles it. Skills that need a human (like this drop) still require World first, so an agent can knock but can't skip the line. Contract and samples: [AGENT.md](./AGENT.md), [`x402-examples`](x402-examples), and the `/chat` tab in the app.
+The booth is one machine. Behind it, the gateway is a marketplace where **agents hire agents, services and devices**, paying per call in USDC on Monad over [x402](https://x402.org): `POST /asp/hire` answers `402`, the agent signs a USDC authorization, and a Monad facilitator settles it. No accounts, no API keys.
+
+Most skills just run. Some shouldn't run on an agent's word alone, like claiming a drop, moving hardware or spending on someone's behalf. Those skills are marked `proof_of_human.required`, and for them **World is the door that says "human needed"**:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor A as Agent
+  participant GW as asp-gateway
+  actor H as Human
+  participant W as World
+  participant M as Monad
+
+  A->>GW: POST /asp/hire (skill needs a human)
+  GW-->>A: 403 human-proof-required + how to open a petition
+  A->>GW: POST /asp/petition
+  GW-->>A: petition_id (pending_human)
+  A->>H: "I need you to approve this"
+  H->>W: World selfie, signal = petition_id
+  W-->>GW: verified, nullifier
+  GW->>GW: petition authorized
+  A->>GW: POST /asp/hire + petition_id
+  GW-->>A: 402 price
+  A->>M: signed USDC authorization (x402)
+  M-->>GW: settled
+  GW-->>A: skill runs once, receipt
+```
+
+The agent does the work, but it can't skip the person. The World proof is bound to that exact petition, so the human knows what they're approving, and the approval works only once. It's the same rule as the drop: **one human, one action**.
+
+In the booth demo the human pays directly from their phone, so x402 isn't on that path. You can try the agent side in the app's `/chat` tab. Contract and samples: [AGENT.md](./AGENT.md), [`x402-examples`](x402-examples).
 
 <div align="center"><sub>World · Monad · AntiScalper Protocol · Monad Metropolis 2026</sub></div>
