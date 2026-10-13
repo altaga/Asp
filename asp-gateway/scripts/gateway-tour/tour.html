@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Asp · inside the gateway</title>
+<style>
+  :root { --red:#E8112D; --cream:#FFF8EF; --ink:#231815; --violet:#836EF9; --muted:#7a6a62; --line:#eadfd2; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--cream); color:var(--ink); font-family: "Segoe UI", Inter, system-ui, sans-serif; }
+  body { display:grid; grid-template-rows: 56px 1fr 52px; height:100vh; border-top:6px solid var(--red); }
+  header { display:flex; align-items:center; justify-content:space-between; padding:0 36px; }
+  .brand { font-weight:900; font-size:26px; color:var(--red); letter-spacing:-0.5px; }
+  .brand small { color:var(--ink); font-weight:600; font-size:14px; margin-left:10px; letter-spacing:0; }
+  .chain { display:flex; gap:8px; align-items:center; font-size:13px; font-weight:600; }
+  .pill { border-radius:999px; padding:4px 10px; background:#fff; border:1px solid var(--line); }
+  .pill.violet { background:var(--violet); color:#fff; border-color:var(--violet); }
+  main { display:grid; grid-template-columns: 0.9fr 1.1fr; gap:28px; padding:8px 36px 16px; min-height:0; }
+  .story { display:flex; flex-direction:column; justify-content:center; }
+  .eyebrow { color:var(--red); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; font-size:13px; }
+  h1 { font-size:40px; line-height:1.08; margin:10px 0 16px; letter-spacing:-1px; }
+  h1 em { color:var(--red); font-style:normal; }
+  .caption { font-size:18px; line-height:1.5; color:#4a3d37; max-width:470px; }
+  .dots { display:flex; gap:6px; margin-top:26px; }
+  .dots i { width:26px; height:5px; border-radius:3px; background:var(--line); }
+  .dots i.on { background:var(--red); }
+  .panel { background:#1b1411; color:#f3e9df; border-radius:18px; padding:18px 20px; display:flex; flex-direction:column; min-height:0; box-shadow: 0 18px 40px rgba(35,24,21,.18); }
+  .req { font-family: "Cascadia Code", Consolas, monospace; font-size:14px; display:flex; justify-content:space-between; gap:12px; align-items:center; padding-bottom:12px; border-bottom:1px solid #3a2e29; }
+  .req b { color:#fff; font-weight:600; }
+  .status { font-weight:700; border-radius:6px; padding:2px 8px; font-size:13px; white-space:nowrap; }
+  .s2 { background:#1f7a3f; } .s4 { background:var(--red); } .s0 { background:var(--violet); }
+  pre { font-family: "Cascadia Code", Consolas, monospace; font-size:14.5px; line-height:1.55; margin:12px 0 0; white-space:pre-wrap; word-break:break-all; overflow:hidden; flex:1; }
+  .k { color:#ffb4a8; } .s { color:#b8e6c3; } .n { color:#ffd479; } .b { color:#c9b8ff; }
+  .ok { color:#7ee2a0; } .bad { color:#ff7d8e; }
+  footer { display:flex; align-items:center; gap:14px; padding:0 36px; font-family:"Cascadia Code", Consolas, monospace; font-size:13px; color:var(--muted); border-top:1px solid var(--line); background:#fff; overflow:hidden; white-space:nowrap; }
+  footer .lbl { font-family:"Segoe UI", sans-serif; font-weight:700; color:var(--ink); }
+  footer .call { background:var(--cream); border:1px solid var(--line); border-radius:6px; padding:3px 8px; }
+  footer .call.new { border-color:var(--violet); color:var(--ink); }
+  .fade { animation: fade .45s ease both; }
+  @keyframes fade { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">ASP <small>inside the gateway</small></div>
+  <div class="chain"><span class="pill">Monad mainnet · 143</span><span class="pill">USDC</span><span class="pill violet">live, read-only</span></div>
+</header>
+<main>
+  <section class="story">
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="title"></h1>
+    <p class="caption" id="caption"></p>
+    <div class="dots" id="dots"></div>
+  </section>
+  <section class="panel">
+    <div class="req"><b id="req">…</b><span id="status" class="status s0">running</span></div>
+    <pre id="out"></pre>
+  </section>
+</main>
+<footer><span class="lbl">Monad RPC</span><span id="rpc">waiting for the first chain read…</span></footer>
+<script>
+const scenes = [
+  { step:'health', eyebrow:'Asp gateway', title:'The referee between <em>humans, agents</em> and Monad.',
+    caption:'The gateway decides who may trigger a scarce machine. It never trusts the client: it asks Monad.' },
+  { step:'skills', eyebrow:'Machines you can hire', title:'Every machine is a <em>priced skill</em>.',
+    caption:'Prices are in Monad USDC. Scarce drops flip World on: that skill needs a verified human.' },
+  { step:'hireArm', eyebrow:'Agents · x402', title:'An agent hires a machine. <em>402.</em>',
+    caption:'The gateway answers with an x402 payment challenge on Monad. The facilitator settles the USDC upfront, before the motor moves.' },
+  { step:'hireGacha', eyebrow:'Agents · World', title:'A scarce drop needs <em>a human</em>.',
+    caption:'An agent alone can’t take the limited item. World is the door that says “a human is needed” — no proof, no hire.' },
+  { step:'receipt', eyebrow:'Humans · WalletConnect', title:'A fan paid <em>on Monad</em>.',
+    caption:'A real claim from the live demo: 0.002 USDC from a phone wallet. The gateway pulls the receipt and the transaction from the RPC.' },
+  { step:'verify', eyebrow:'Fail-closed', title:'The gateway’s own check, <em>against the chain</em>.',
+    caption:'Mined and successful · sent to USDC · exact amount to the gateway · carries this claim’s 16-byte tag. Change anything and the item stays locked.' },
+  { step:'release', eyebrow:'AspDrop · ERC-721', title:'Released <em>once</em>, on Monad.',
+    caption:'The payment’s claim maps to one edition. tokenOfClaim proves it went to the wallet that paid; a second release reverts.' },
+  { step:'rpc', eyebrow:'Under every decision', title:'One RPC. <em>Every call above.</em>',
+    caption:'' },
+];
+
+const $ = (id) => document.getElementById(id);
+$('dots').innerHTML = scenes.map(() => '<i></i>').join('');
+
+function color(json) {
+  const esc = JSON.stringify(json, null, 2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  return esc
+    .replace(/"([^"]+)":/g, '<span class="k">"$1"</span>:')
+    .replace(/: "([^"]*)"/g, (m, v) => {
+      const cls = /error|reverts|mismatch|required/i.test(v) ? 'bad' : 's';
+      return `: <span class="${cls}">"${v}"</span>`;
+    })
+    .replace(/: (true)\b/g, ': <span class="ok">$1</span>')
+    .replace(/: (false)\b/g, ': <span class="bad">$1</span>')
+    .replace(/: (-?\d+(\.\d+)?)\b/g, ': <span class="n">$1</span>');
+}
+
+let lastSeq = 0;
+async function refreshRpc() {
+  const r = await fetch('/rpc-log').then((x) => x.json());
+  if (!r.calls.length) return r;
+  $('rpc').innerHTML = `<b>${r.primary}</b> &nbsp; ` + r.calls.map((c) =>
+    `<span class="call ${c.seq > lastSeq ? 'new' : ''}">${c.method} · ${c.ms} ms</span>`).join(' ');
+  lastSeq = Math.max(...r.calls.map((c) => c.seq));
+  return r;
+}
+
+async function go(i) {
+  const sc = scenes[i];
+  [...$('dots').children].forEach((d, j) => d.classList.toggle('on', j <= i));
+  for (const id of ['eyebrow', 'title', 'caption']) { $(id).classList.remove('fade'); void $(id).offsetWidth; $(id).classList.add('fade'); }
+  $('eyebrow').textContent = sc.eyebrow;
+  $('title').innerHTML = sc.title;
+  $('caption').textContent = sc.caption;
+  $('req').textContent = '…';
+  $('status').className = 'status s0';
+  $('status').textContent = 'running';
+  $('out').innerHTML = '';
+
+  const out = await fetch(`/step/${sc.step}`).then((x) => x.json());
+  const rpc = await refreshRpc();
+  if (sc.step === 'rpc') {
+    $('caption').textContent = /alchemy/i.test(rpc.primary)
+      ? 'Alchemy is the primary Monad RPC behind the gateway; the public endpoint is only a fallback. Asp · github.com/altaga/Asp'
+      : 'Every check above is a Monad RPC read through MONAD_RPC_URL, with the public endpoint as fallback. Asp · github.com/altaga/Asp';
+  }
+  $('req').textContent = out.request || out.error || '';
+  const code = out.status;
+  $('status').className = 'status ' + (code ? (code < 300 ? 's2' : 's4') : 's0');
+  $('status').textContent = code ? `${code}${out.ms != null ? ` · ${out.ms} ms` : ''}` : 'on-chain';
+  $('out').classList.remove('fade'); void $('out').offsetWidth; $('out').classList.add('fade');
+  $('out').innerHTML = color(out.body ?? out);
+  return true;
+}
+
+let cur = -1;
+window.tour = { go: (i) => go((cur = i)), count: scenes.length };
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' && cur < scenes.length - 1) window.tour.go(cur + 1);
+  if (e.key === 'ArrowLeft' && cur > 0) window.tour.go(cur - 1);
+});
+if (!new URLSearchParams(location.search).has('manual')) window.tour.go(0);
+</script>
+</body>
+</html>
