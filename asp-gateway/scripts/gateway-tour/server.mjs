@@ -4,6 +4,7 @@
 //
 //   cd asp-gateway && node scripts/gateway-tour/server.mjs
 //   (optional) MONAD_RPC_URL=https://monad-mainnet.g.alchemy.com/v2/<key> node scripts/gateway-tour/server.mjs
+//   http://localhost:5077/?set=alchemy — primary RPC vs public Monad RPC, side by side
 import http from 'node:http';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -40,9 +41,22 @@ globalThis.fetch = async (input, init) => {
   return res;
 };
 
-const { verifyUsdcPayment, nonceTag } = await import('../../src/services/kiosk/monadPayment.js');
-const { publicClient, MONAD_RPC_URLS, USDC_ADDRESS, MONAD_CHAIN_ID } = await import('../../src/services/monad/chain.js');
-const { keccak256, toHex, parseAbi, formatUnits, parseEventLogs, erc20Abi } = await import('viem');
+const { verifyUsdcPayment, nonceTag, findTaggedTransfer } = await import('../../src/services/kiosk/monadPayment.js');
+const { publicClient, monadChain, MONAD_RPC_URLS, USDC_ADDRESS, MONAD_CHAIN_ID } = await import('../../src/services/monad/chain.js');
+const { keccak256, toHex, parseAbi, formatUnits, parseEventLogs, erc20Abi, createPublicClient, http: viemHttp } = await import('viem');
+
+const PRIMARY_RPC = MONAD_RPC_URLS[0];
+const providerName = (u) => (/alchemy/i.test(u) ? 'Alchemy' : maskUrl(u));
+const primaryClient = createPublicClient({
+  chain: monadChain,
+  transport: viemHttp(PRIMARY_RPC, { timeout: 15_000, retryCount: 0 }),
+});
+
+async function timed(fn) {
+  const t0 = performance.now();
+  const value = await fn();
+  return { ms: Math.round(performance.now() - t0), value };
+}
 
 const GATEWAY = (process.env.TOUR_GATEWAY_URL || 'https://asp-gateway.hackathon.dpdns.org').replace(/\/$/, '');
 const ASP_DROP = '0x942c1a378b961fb7a95b83ecaf55fecee42c6187';
@@ -181,6 +195,81 @@ const steps = {
     };
   },
 
+  async aIntro() {
+    const [chainId, head] = await Promise.all([
+      timed(() => primaryClient.getChainId()),
+      timed(() => primaryClient.getBlockNumber()),
+    ]);
+    return {
+      request: `${providerName(PRIMARY_RPC)} · eth_chainId + eth_blockNumber`,
+      body: {
+        provider: providerName(PRIMARY_RPC),
+        endpoint: maskUrl(PRIMARY_RPC),
+        chainId: chainId.value,
+        'head block': head.value,
+        latency: `${head.ms} ms`,
+        'used by': ['asp-gateway (payment checks)', 'x402 facilitator (settlement)', 'AspDrop release service'],
+      },
+    };
+  },
+
+  async aVerify() {
+    const before = rpcSeq;
+    const base = { txHash: PAID.txHash, token: USDC_ADDRESS, receiver: PAID.receiver, nonce: PAID.nonce, amount: PAID.amount };
+    const out = await verifyUsdcPayment({ ...base, notBeforeMs: 1 });
+    const reads = rpcLog.filter((c) => c.seq > before).map((c) => `${c.method} · ${c.host === maskUrl(PRIMARY_RPC) ? providerName(PRIMARY_RPC) : c.host} · ${c.ms} ms`);
+    return {
+      request: 'verifyUsdcPayment()  — one real claim',
+      body: {
+        unlock: out.ok ? 'yes — paid, exact, tagged, on Monad' : out.error,
+        'Monad reads behind this one decision': reads,
+      },
+    };
+  },
+
+  async aScan() {
+    const receipt = await primaryClient.getTransactionReceipt({ hash: PAID.txHash });
+    const before = rpcSeq;
+    const t0 = performance.now();
+    const found = await findTaggedTransfer({
+      nonce: PAID.nonce,
+      amount: PAID.amount,
+      token: USDC_ADDRESS,
+      receiver: PAID.receiver,
+      fromBlock: String(receipt.blockNumber - 25n),
+    });
+    const logs = rpcLog.filter((c) => c.seq > before && c.method === 'eth_getLogs');
+    return {
+      request: 'findTaggedTransfer()  — no tx hash from the phone',
+      body: {
+        'started at block': String(receipt.blockNumber - 25n),
+        'window per call': `${process.env.MONAD_LOGS_SPAN || 100} blocks`,
+        'eth_getLogs calls': logs.map((c) => `${c.host === maskUrl(PRIMARY_RPC) ? providerName(PRIMARY_RPC) : c.host} · ${c.ms} ms`),
+        'payment found': found.txHash,
+        'matches the real claim': found.txHash === PAID.txHash,
+        'total time': `${Math.round(performance.now() - t0)} ms`,
+      },
+    };
+  },
+
+  async aRelease() {
+    const claimId = keccak256(toHex(`asp-drop:${PAID.nonce}`));
+    const read = (functionName, args = []) =>
+      primaryClient.readContract({ address: ASP_DROP, abi: DROP_ABI, functionName, args });
+    const [tokenId, remaining, maxSupply] = await Promise.all([read('tokenOfClaim', [claimId]), read('remaining'), read('maxSupply')]);
+    const owner = await read('ownerOf', [tokenId]);
+    return {
+      request: `AspDrop via ${providerName(PRIMARY_RPC)} · eth_call`,
+      body: {
+        'tokenOfClaim(claim)': `#${tokenId}`,
+        'ownerOf(token)': owner,
+        'paid by': '0xD59C797f8398a602B546227655179ab49A5973fF',
+        stock: `${remaining} of ${maxSupply} left`,
+        'second release': 'reverts AlreadyReleased()',
+      },
+    };
+  },
+
   async rpc() {
     const byMethod = {};
     for (const c of rpcLog) byMethod[c.method] = (byMethod[c.method] || 0) + 1;
@@ -210,7 +299,7 @@ http.createServer(async (req, res) => {
   }
   if (url.pathname === '/rpc-log') {
     res.writeHead(200, { 'content-type': 'application/json' });
-    return res.end(JSON.stringify({ calls: rpcLog.slice(-6), primary: maskUrl(MONAD_RPC_URLS[0]) }));
+    return res.end(JSON.stringify({ calls: rpcLog.slice(-6), primary: maskUrl(PRIMARY_RPC), provider: providerName(PRIMARY_RPC) }));
   }
   const step = url.pathname.startsWith('/step/') && steps[url.pathname.slice(6)];
   if (!step) {

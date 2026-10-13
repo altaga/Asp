@@ -50,7 +50,8 @@ async function fetchReceipt(hash) {
   }
 }
 
-const LOG_SPAN = 100n; // public Monad RPC rejects wider eth_getLogs ranges
+// eth_getLogs block-range cap of the primary RPC: public Monad allows 100, Alchemy free tier 10.
+const LOG_SPAN = BigInt(process.env.MONAD_LOGS_SPAN || 100);
 const MAX_SPANS_PER_SCAN = 8;
 
 export async function currentBlock() {

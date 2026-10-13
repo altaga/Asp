@@ -42,7 +42,7 @@
 <body>
 <header>
   <div class="brand">ASP <small>inside the gateway</small></div>
-  <div class="chain"><span class="pill">Monad mainnet · 143</span><span class="pill">USDC</span><span class="pill violet">live, read-only</span></div>
+  <div class="chain"><span class="pill">Monad mainnet · 143</span><span class="pill">USDC</span><span class="pill violet" id="provider">live, read-only</span></div>
 </header>
 <main>
   <section class="story">
@@ -58,7 +58,20 @@
 </main>
 <footer><span class="lbl">Monad RPC</span><span id="rpc">waiting for the first chain read…</span></footer>
 <script>
-const scenes = [
+const ALCHEMY_SCENES = [
+  { step:'aIntro', eyebrow:'{P} × Monad', title:'Asp’s referee reads Monad <em>through {P}</em>.',
+    caption:'Asp unlocks a limited item only when the chain says a human paid. Every one of those decisions is an RPC read — so the RPC is part of the fairness, not plumbing.' },
+  { step:'aVerify', eyebrow:'Why it’s vital · 1', title:'A bad read is <em>a wrong winner</em>.',
+    caption:'Three Monad reads decide one unlock: receipt and its USDC logs, the transaction and its tag, the block time. The gateway is fail-closed — if the RPC stalls, a fan who already paid waits at the machine.' },
+  { step:'aScan', eyebrow:'Why it’s vital · 2', title:'When the phone goes quiet, <em>we search the chain</em>.',
+    caption:'WalletConnect replies get lost. Every 2 seconds the gateway asks {P} for USDC transfers into it and matches this claim’s tag — the fan still gets the item.' },
+  { step:'aRelease', eyebrow:'Why it’s vital · 3', title:'<em>One view</em> of Monad.',
+    caption:'Gateway, x402 facilitator and the AspDrop release service all go through {P}. One provider means they never disagree about a claim mid-flight.' },
+  { step:'rpc', eyebrow:'Primary RPC', title:'<em>{P}</em> first. Public Monad as fallback.',
+    caption:'One MONAD_RPC_URL in every service, viem fallback transport behind it. Asp · github.com/altaga/Asp' },
+];
+
+const GATEWAY_SCENES = [
   { step:'health', eyebrow:'Asp gateway', title:'The referee between <em>humans, agents</em> and Monad.',
     caption:'The gateway decides who may trigger a scarce machine. It never trusts the client: it asks Monad.' },
   { step:'skills', eyebrow:'Machines you can hire', title:'Every machine is a <em>priced skill</em>.',
@@ -76,6 +89,11 @@ const scenes = [
   { step:'rpc', eyebrow:'Under every decision', title:'One RPC. <em>Every call above.</em>',
     caption:'' },
 ];
+
+const ALCHEMY_SET = new URLSearchParams(location.search).get('set') === 'alchemy';
+const scenes = ALCHEMY_SET ? ALCHEMY_SCENES : GATEWAY_SCENES;
+let provider = 'the primary RPC';
+const fill = (s) => s.replaceAll('{P}', provider);
 
 const $ = (id) => document.getElementById(id);
 $('dots').innerHTML = scenes.map(() => '<i></i>').join('');
@@ -107,9 +125,9 @@ async function go(i) {
   const sc = scenes[i];
   [...$('dots').children].forEach((d, j) => d.classList.toggle('on', j <= i));
   for (const id of ['eyebrow', 'title', 'caption']) { $(id).classList.remove('fade'); void $(id).offsetWidth; $(id).classList.add('fade'); }
-  $('eyebrow').textContent = sc.eyebrow;
-  $('title').innerHTML = sc.title;
-  $('caption').textContent = sc.caption;
+  $('eyebrow').textContent = fill(sc.eyebrow);
+  $('title').innerHTML = fill(sc.title);
+  $('caption').textContent = fill(sc.caption);
   $('req').textContent = '…';
   $('status').className = 'status s0';
   $('status').textContent = 'running';
@@ -117,7 +135,7 @@ async function go(i) {
 
   const out = await fetch(`/step/${sc.step}`).then((x) => x.json());
   const rpc = await refreshRpc();
-  if (sc.step === 'rpc') {
+  if (sc.step === 'rpc' && !ALCHEMY_SET) {
     $('caption').textContent = /alchemy/i.test(rpc.primary)
       ? 'Alchemy is the primary Monad RPC behind the gateway; the public endpoint is only a fallback. Asp · github.com/altaga/Asp'
       : 'Every check above is a Monad RPC read through MONAD_RPC_URL, with the public endpoint as fallback. Asp · github.com/altaga/Asp';
@@ -132,7 +150,11 @@ async function go(i) {
 }
 
 let cur = -1;
-window.tour = { go: (i) => go((cur = i)), count: scenes.length };
+const ready = fetch('/rpc-log').then((x) => x.json()).then((r) => {
+  provider = r.provider;
+  if (ALCHEMY_SET) $('provider').textContent = `RPC · ${provider}`;
+});
+window.tour = { go: async (i) => { await ready; return go((cur = i)); }, count: scenes.length };
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' && cur < scenes.length - 1) window.tour.go(cur + 1);
   if (e.key === 'ArrowLeft' && cur > 0) window.tour.go(cur - 1);
