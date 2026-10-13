@@ -34,6 +34,7 @@ export function SignupPage() {
           noun={copy.noun}
           claimHref={variantHref(variant, '/claim')}
           onVerify={get.startWorld}
+          onSkip={get.skipWorld}
           onCopy={() => void get.copyTicket()}
           onNext={get.nextPerson}
         />

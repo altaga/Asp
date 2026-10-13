@@ -19,6 +19,7 @@ type Props = {
   noun: string;
   claimHref: string;
   onVerify: () => void;
+  onSkip: () => void;
   onCopy: () => void;
   onNext: () => void;
 };
@@ -54,6 +55,15 @@ export function GetPanel(p: Props) {
           {p.phase === 'error' && p.detail ? <pre className="pop-error">{p.detail}</pre> : null}
           <button type="button" className="pop-btn" disabled={p.busy || p.phase === 'working'} onClick={p.onVerify}>
             {p.phase === 'working' ? 'Opening World ID…' : 'Confirm with World ID'}
+          </button>
+          <button
+            type="button"
+            className="pop-btn pop-btn-ghost"
+            style={{ marginTop: 10 }}
+            disabled={p.busy || p.phase === 'working'}
+            onClick={p.onSkip}
+          >
+            Skip World (demo)
           </button>
           <p className="pop-hint" style={{ marginTop: 14 }}>One check · no account · nothing personal stored</p>
         </div>

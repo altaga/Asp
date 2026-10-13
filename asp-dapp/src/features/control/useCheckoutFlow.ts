@@ -17,6 +17,7 @@ import {
   type ReleaseKind,
 } from '../kiosk/kioskPay';
 import { dropNft } from '../nft/nftDrop';
+import { authorizeDemoIdentity } from '../world/demoIdentity';
 import type { NftDrop } from '../nft/nftTypes';
 import { clearPendingDrop, readPendingDrop, savePendingDrop, type PendingDrop } from '../nft/pendingDrop';
 import type { ChatPhase, PohCardPayload } from '../../theme/tokens';
@@ -258,17 +259,12 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
     setWorldOpen(true);
   }, [activePoh]);
 
-  const onWorldProof = useCallback(
-    async (idkitResponse: unknown) => {
+  const authorizeHuman = useCallback(
+    async (authorize: (petition_id: string, ticket: string) => Promise<any>) => {
       if (!activePoh?.petition_id) throw new Error('No active petition');
       if (!ticket) throw new Error('No winner ticket');
       try {
-        const data = await verifyProofOfHuman(activePoh.petition_id, idkitResponse, {
-          // Same enroll action as signup → same nullifier (recognize returning human).
-          action: ENROLL_ACTION,
-          signal: activePoh.petition_id,
-          ticket: ticket.trim().toUpperCase(),
-        });
+        const data = await authorize(activePoh.petition_id, ticket.trim().toUpperCase());
         const petition = data.petition;
         const updated: PohCardPayload = {
           ...activePoh,
@@ -300,6 +296,29 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
     },
     [activePoh, item, startQrPay, ticket]
   );
+
+  const onWorldProof = useCallback(
+    (idkitResponse: unknown) =>
+      authorizeHuman((petition_id, t) =>
+        verifyProofOfHuman(petition_id, idkitResponse, {
+          // Same enroll action as signup → same nullifier (recognize returning human).
+          action: ENROLL_ACTION,
+          signal: petition_id,
+          ticket: t,
+        })
+      ),
+    [authorizeHuman]
+  );
+
+  /** Skip World: authorize with this browser's cookie nonce instead of a World proof. */
+  const skipWorld = useCallback(async () => {
+    setErrorDetail(null);
+    try {
+      await authorizeHuman(authorizeDemoIdentity);
+    } catch (e: any) {
+      setErrorDetail([e?.message, e?.code].filter(Boolean).join(' · ') || 'Skip World failed');
+    }
+  }, [authorizeHuman]);
 
   useEffect(() => {
     if (phase !== 'awaiting_phone_pay' || !kioskPay?.nonce || !activePoh?.petition_id) return;
@@ -569,6 +588,7 @@ export function useCheckoutFlow({ release = 'motor' }: { release?: ReleaseKind }
     requestCapsule,
     openWorldVerify,
     onWorldProof,
+    skipWorld,
     submitTx,
     release,
     pendingDrop,

@@ -26,7 +26,12 @@ export function ClaimActions({ flow }: { flow: Flow }) {
           </button>
         ) : null}
         {canVerify ? (
-          <button type="button" className="pop-btn" onClick={() => flow.openWorldVerify()}>Confirm with World ID</button>
+          <>
+            <button type="button" className="pop-btn" onClick={() => flow.openWorldVerify()}>Confirm with World ID</button>
+            <button type="button" className="pop-btn pop-btn-ghost" onClick={() => void flow.skipWorld()}>
+              Skip World (demo)
+            </button>
+          </>
         ) : null}
         {canRetryQr ? (
           <button type="button" className="pop-btn pop-btn-ghost" onClick={() => flow.retryQr()}>Pay again</button>

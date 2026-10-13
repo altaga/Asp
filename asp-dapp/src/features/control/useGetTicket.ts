@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ENROLL_ACTION, enrollWinner } from '../hire/gateway';
+import { enrollDemoIdentity } from '../world/demoIdentity';
 import { clearDemoTicket, saveDemoTicket } from './aspDemoTicket';
 
 const { toast } = require('react-hot-toast');
@@ -41,10 +42,10 @@ export function useGetTicket() {
     if (!open) setPhase((p) => (p === 'working' ? 'ready' : p));
   }, []);
 
-  const onVerified = useCallback(async (idkitResponse: unknown) => {
+  const enroll = useCallback(async (register: () => Promise<any>) => {
     setBusy(true);
     try {
-      const out = await enrollWinner(idkitResponse, { action: ENROLL_ACTION, signal: 'asp-enroll' });
+      const out = await register();
       const t = out.winner?.ticket;
       if (!t) throw new Error('No ticket returned');
       const claimed = Boolean(out.winner?.claimed_at);
@@ -67,6 +68,18 @@ export function useGetTicket() {
     }
   }, []);
 
+  const onVerified = useCallback(
+    (idkitResponse: unknown) =>
+      enroll(() => enrollWinner(idkitResponse, { action: ENROLL_ACTION, signal: 'asp-enroll' })),
+    [enroll]
+  );
+
+  /** Skip World: this browser's cookie nonce stands in for the nullifier. */
+  const skipWorld = useCallback(() => {
+    setDetail(null);
+    enroll(enrollDemoIdentity).catch(() => {});
+  }, [enroll]);
+
   const onWorldError = useCallback((msg: string) => {
     setPhase('error');
     setDetail(msg);
@@ -86,6 +99,6 @@ export function useGetTicket() {
   return {
     phase, ticket, alreadyEnrolled, alreadyClaimed, detail, busy, worldOpen,
     enrollAction: ENROLL_ACTION,
-    startWorld, onWorldOpenChange, onVerified, onWorldError, copyTicket, nextPerson,
+    startWorld, skipWorld, onWorldOpenChange, onVerified, onWorldError, copyTicket, nextPerson,
   };
 }
